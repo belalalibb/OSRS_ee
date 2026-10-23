@@ -150,7 +150,7 @@ P:A–G أدخلت تحليليًا في المعمارية والعقود وا�
 |---|---|---|
 | ADR-001 | MANDATED | OSRS_ee/main؛حفظالتاريخ؛docs→verified publish→offline |
 | ADR-002 | SCOPE_BASELINE | AI advisory بلاaction authority؛لاLIVE_AI_TRIAGE التلقائي |
-| ADR-003 | PROPOSED | SQLite محلي موصىبه؛JSON بديلببروتوكولdurability كامل؛اختيارصريحقبلS02 |
+| ADR-003 | ACCEPTED 2026-10-23 (قرار المالك: «SQLite») | SQLite محلي عبر stdlib `sqlite3`: journal_mode=WAL، synchronous=FULL، foreign_keys=ON، busy_timeout؛ كاتب منطقي واحد (Store)؛ كل انتقال حالة/lease/journal/dedupe في معاملة واحدة؛ backup عبر `Connection.backup` + checksum؛ لا ادعاء durability مطلقة عبر power loss دون اختبار على OS الهدف (ADR-007). JSON مرفوض كأساسي. |
 | ADR-004 | SCOPE_BASELINE | supervisor/fake account واحد،Store مالكالحالة وAdapter بوابةوحيدة؛لاJVM reuse |
 | ADR-005 | SCOPE_BASELINE | immutable releases،staging/contracts/approval/drain/canary،rollback متوافق |
 | ADR-006 | DEFERRED | GE/بيع/نقل/RWT،mutation/spoofing/personas،auto-executable discovery |
