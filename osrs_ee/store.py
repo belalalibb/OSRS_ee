@@ -121,6 +121,19 @@ class CommandRow:
     finished_at: Optional[str] = None
 
 
+@dataclass(frozen=True)
+class ApprovalRow:
+    approval_id: str
+    incident_id: str
+    account_id: str
+    session_epoch: int
+    plan_hash: str
+    state_version: int
+    approver_ref: str
+    expires_at: str
+    used_at: Optional[str]
+
+
 def _iso(dt: datetime) -> str:
     if dt.tzinfo is None:
         raise ValueError("timestamps must be timezone-aware UTC")
@@ -389,6 +402,13 @@ class Store:
                 "INSERT INTO approvals(approval_id,incident_id,account_id,session_epoch,plan_hash,state_version,approver_ref,expires_at,created_at)"
                 " VALUES(?,?,?,?,?,?,?,?,?)",
                 (approval_id, incident_id, account_id, session_epoch, plan_hash, state_version, approver_ref, _iso(expires_at), _iso(now)))
+
+    def get_approval(self, approval_id: str) -> Optional[ApprovalRow]:
+        r = self._conn.execute("SELECT * FROM approvals WHERE approval_id=?", (approval_id,)).fetchone()
+        if r is None:
+            return None
+        return ApprovalRow(r["approval_id"], r["incident_id"], r["account_id"], r["session_epoch"], r["plan_hash"],
+                           r["state_version"], r["approver_ref"], r["expires_at"], r["used_at"])
 
     def consume_approval(self, approval_id: str, *, incident_id: str, account_id: str, session_epoch: int, plan_hash: str,
                          state_version: int, now: datetime) -> None:
