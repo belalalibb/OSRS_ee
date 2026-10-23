@@ -6,11 +6,16 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | *(يُملأ بعد رفع أول حزمة من هذه النسخة؛ حتى ذلك الحين: حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Wbh3j3VW ، SHA-256 `a973b8ecad4ce71290341ccdbf59115286ccd1a8330fd3d325c8a613b24a342e`، تحتوي checkpoint `3740096f`)* |
-| commit | `3740096f31d4977b5d5705c4dd7208166208908c` على `main` |
-| الفرع العامل | `genspark_ai_developer` (يبدأ من `3740096f`) |
+| الرابط | https://www.genspark.ai/api/files/s/mcC7Qm4p (bundle S00، SHA-256 `f949c09abfed2ba54b0eaccf1a21c582a74f4ecc8dd4f658986efe36420dd5ce`) |
+| commit | `17fa22765fd1125311477776b79349323ce3cab3` على `genspark_ai_developer` |
+| main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
+| احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
 سجل الحزم الكامل في `evidence/bundles.md`. الحزمة الأحدث تحتوي دائمًا سجل سابقاتها.
+
+## حادثة فقد 2026-10-23 ~18:52
+
+مُسحت مساحة العمل للمرة الخامسة قبل تحزيم S01؛ ضاع عمل S01 غير المحزّم (schemas/package/fixtures/tests كانت تمر 10/10) وcommit تسجيل الحزمة. القاعدة المشددة: **لا رد للمالك قبل رفع الحزمة**؛ الشرائح أصغر؛ bundle بعد كل ملف مجموعة مكتملة.
 
 ## العائق الثابت
 
