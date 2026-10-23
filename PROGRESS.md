@@ -6,8 +6,8 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/mcC7Qm4p (bundle S00، SHA-256 `f949c09abfed2ba54b0eaccf1a21c582a74f4ecc8dd4f658986efe36420dd5ce`) |
-| commit | `17fa22765fd1125311477776b79349323ce3cab3` على `genspark_ai_developer` |
+| الرابط | https://www.genspark.ai/api/files/s/MscCLaF6 (bundle S02c، SHA-256 `b00b738909a0672d4bd5fd01410a21e20f13c0fdb57f6d506d3eed3bf5b18e18`) |
+| commit | `5dcd583` على `genspark_ai_developer` (77 اختبارًا تمر) |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
