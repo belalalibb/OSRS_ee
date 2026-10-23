@@ -4,6 +4,8 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 20:50 | `e2087e7` (genspark_ai_developer) | `649c641be5054cbeda84b93ece38d1325c54041aa38e8627602ce139a98cdf7f` | https://www.genspark.ai/api/files/s/wx2sCUVk | S06a: telegram.py + test_telegram.py (22)؛ 119 اختبارًا |
+| 2026-10-23 20:30 | `67958f2` (genspark_ai_developer) | `33561a5bc0f029eaa927466bc5d512221ce58a264e9b6395693480c28497e14e` | https://www.genspark.ai/api/files/s/Q58PyjGg | S03b: أدلة S03. استُعيدت بنجاح بعد المسح الحادي عشر |
 | 2026-10-23 20:20 | `21976d5` (genspark_ai_developer) | `41410350f3e6c6ab5f12f4175907cd594c04fef974d431120ed35fe6acf08c95` | https://www.genspark.ai/api/files/s/qEzrvMmO | S03a: worker.py + test_worker.py (20)؛ 97 اختبارًا |
 | 2026-10-23 20:00 | `514aaca` (genspark_ai_developer) | `74eb9642510839599bb1f0b247e988a214d7f7669832b64864087aa030ccec9a` | https://www.genspark.ai/api/files/s/C2jlpITV | S02d: تسجيل حزمة S02c. استُعيدت بنجاح بعد المسح العاشر |
 | 2026-10-23 19:55 | `5dcd583` (genspark_ai_developer) | `b00b738909a0672d4bd5fd01410a21e20f13c0fdb57f6d506d3eed3bf5b18e18` | https://www.genspark.ai/api/files/s/MscCLaF6 | S02c: test_store_events.py (15) + إصلاح recover() + evidence/s02_tests.md؛ 77 اختبارًا؛ S02 DONE_LOCAL |
