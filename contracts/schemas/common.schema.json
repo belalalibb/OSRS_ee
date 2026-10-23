@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osrs-ee.local/schemas/common.schema.json",
+  "title": "OSRS_ee shared definitions v1.0",
+  "$defs": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "opaque_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*_[A-Za-z0-9][A-Za-z0-9_-]{2,62}$", "description": "prefix_value; opaque, never a slot/PID/port" },
+    "sha256_hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "rfc3339_utc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$" },
+    "epoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "state_version": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "seconds": { "type": "integer", "minimum": 1, "maximum": 86400 },
+    "ref": { "type": "string", "pattern": "^ref:[a-z][a-z0-9_]*:[A-Za-z0-9_-]{3,64}$", "description": "indirect reference to a secret/endpoint; never the value" },
+    "auth_mode": { "type": "string", "enum": ["UNKNOWN", "LEGACY", "JAGEX_SESSION"] },
+    "account_state": { "type": "string", "enum": ["NEW", "PENDING_DISCOVERY", "DISCOVERING", "READY", "LEASED", "STARTING", "RUNNING", "DRAINING", "RESTING", "BLOCKED", "RECOVERY_REQUIRED", "RECONCILING", "DISABLED"] },
+    "field_quality": { "type": "string", "enum": ["KNOWN", "STALE", "UNKNOWN"] },
+    "consistency": { "type": "string", "enum": ["BEST_EFFORT", "SNAPSHOT"] },
+    "transport_status": { "type": "string", "enum": ["NOT_SENT", "ACKNOWLEDGED", "REJECTED", "TIMEOUT", "CONNECTION_LOST"] },
+    "effect_status": { "type": "string", "enum": ["NOT_ATTEMPTED", "UNKNOWN", "VERIFIED", "FAILED_VERIFIED"] },
+    "reason_code": { "type": "string", "enum": ["NONE", "STALE_CONTEXT", "POLICY_DENIED", "HUMAN_AUTH_REQUIRED", "BANK_PIN_REQUIRED", "INSUFFICIENT_RESOURCES", "PROXY_UNAVAILABLE", "CAPABILITY_UNKNOWN", "IDENTITY_UNVERIFIED", "DEADLINE_EXCEEDED", "STORAGE_UNAVAILABLE"] },
+    "operation": { "type": "string", "enum": ["NOOP", "OBSERVE", "BANK_OPEN", "BANK_CLOSE", "BANK_DEPOSIT_INVENTORY", "BANK_WITHDRAW", "WALK_TO", "LOGOUT"] },
+    "ai_action": { "type": "string", "enum": ["NO_ACTION", "REQUEST_REOBSERVATION", "REQUEST_HUMAN_REVIEW"] },
+    "loopback_endpoint": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|\\[::1\\]|localhost):[0-9]{2,5}(/[A-Za-z0-9_./-]*)?$" }
+  }
+}

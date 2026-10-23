@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osrs-ee.local/schemas/observation.schema.json",
+  "title": "Observation v1.0",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version","observation_id","account_id","client_instance_id","session_epoch","observed_at","state_version","consistency","fields"],
+  "properties": {
+    "schema_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/schema_version"},
+    "observation_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "account_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "client_instance_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"},
+    "session_epoch": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/epoch"}, "observed_at": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/rfc3339_utc"}, "state_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/state_version"},
+    "consistency": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/consistency"},
+    "fields": {
+      "type": "object", "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9_]*)+$", "description": "namespaced: bank.open, varp.281"},
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false,
+        "required": ["quality","source","observed_at","value"],
+        "properties": {
+          "quality": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/field_quality"},
+          "source": {"type": "string", "minLength": 1, "maxLength": 64},
+          "observed_at": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/rfc3339_utc"},
+          "value": {"type": ["null","boolean","integer","string","array"], "maxLength": 1024, "maxItems": 256}
+        },
+        "allOf": [
+          {"if": {"properties": {"quality": {"const": "UNKNOWN"}}}, "then": {"properties": {"value": {"type": "null"}}}},
+          {"if": {"properties": {"quality": {"enum": ["KNOWN","STALE"]}}}, "then": {"properties": {"value": {"not": {"type": "null"}}}}}
+        ]
+      }
+    }
+  }
+}

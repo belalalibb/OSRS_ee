@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osrs-ee.local/schemas/result_event.schema.json",
+  "title": "ResultEvent v1.0",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version","event_id","command_id","session_id","session_epoch","state_version","transport_status","effect_status","reason_code","evidence_refs","occurred_at"],
+  "properties": {
+    "schema_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/schema_version"},
+    "event_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "command_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "session_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"},
+    "session_epoch": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/epoch"}, "state_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/state_version"},
+    "transport_status": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/transport_status"}, "effect_status": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/effect_status"}, "reason_code": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/reason_code"},
+    "evidence_refs": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}},
+    "occurred_at": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/rfc3339_utc"}
+  },
+  "allOf": [
+    {"if": {"properties": {"transport_status": {"const": "NOT_SENT"}}}, "then": {"properties": {"effect_status": {"const": "NOT_ATTEMPTED"}}}},
+    {"if": {"properties": {"transport_status": {"enum": ["TIMEOUT","CONNECTION_LOST","ACKNOWLEDGED"]}}}, "then": {"properties": {"effect_status": {"enum": ["UNKNOWN","VERIFIED","FAILED_VERIFIED"]}}}},
+    {"if": {"properties": {"effect_status": {"enum": ["VERIFIED","FAILED_VERIFIED"]}}}, "then": {"properties": {"evidence_refs": {"minItems": 1}}}},
+    {"if": {"properties": {"effect_status": {"const": "NOT_ATTEMPTED"}}}, "then": {"properties": {"reason_code": {"not": {"const": "NONE"}}}}}
+  ]
+}
