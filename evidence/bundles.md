@@ -4,6 +4,8 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 20:20 | `21976d5` (genspark_ai_developer) | `41410350f3e6c6ab5f12f4175907cd594c04fef974d431120ed35fe6acf08c95` | https://www.genspark.ai/api/files/s/qEzrvMmO | S03a: worker.py + test_worker.py (20)؛ 97 اختبارًا |
+| 2026-10-23 20:00 | `514aaca` (genspark_ai_developer) | `74eb9642510839599bb1f0b247e988a214d7f7669832b64864087aa030ccec9a` | https://www.genspark.ai/api/files/s/C2jlpITV | S02d: تسجيل حزمة S02c. استُعيدت بنجاح بعد المسح العاشر |
 | 2026-10-23 19:55 | `5dcd583` (genspark_ai_developer) | `b00b738909a0672d4bd5fd01410a21e20f13c0fdb57f6d506d3eed3bf5b18e18` | https://www.genspark.ai/api/files/s/MscCLaF6 | S02c: test_store_events.py (15) + إصلاح recover() + evidence/s02_tests.md؛ 77 اختبارًا؛ S02 DONE_LOCAL |
 | 2026-10-23 19:40 | `8bc09d7` (genspark_ai_developer) | `0f41e7e233f0820dc33cd2cf9bc53c1f226e1f1dd15bf8d99aada366026ad321` | https://www.genspark.ai/api/files/s/kwYpDoXC | S02b: test_store.py (19)؛ 62 اختبارًا تمر. استُعيدت بنجاح بعد المسح التاسع |
 | 2026-10-23 19:30 | `c1473c8` (genspark_ai_developer) | `42dda889c13d19fef6022e60c1dd9953a658f84868d575c79bb0db8141bda882` | https://www.genspark.ai/api/files/s/nUOIwBX9 | S02a: store.py + store_schema.sql (ADR-003 = SQLite) |
