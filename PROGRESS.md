@@ -1,13 +1,13 @@
 # نقطة الاستئناف — OSRS_ee
 
-الحالة: LOCAL_DEVELOPMENT / NOT_PUSHED. الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
+الحالة: LOCAL_COMPLETE_FOR_SANDBOX / NOT_PUSHED (156 اختبارًا offline تمر؛ المتبقي داخل التفويض: PUB-02 فقط). الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
 
 ## آخر حزمة استعادة (ابدأ من هنا عند «تابع»)
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/MscCLaF6 (bundle S02c، SHA-256 `b00b738909a0672d4bd5fd01410a21e20f13c0fdb57f6d506d3eed3bf5b18e18`) |
-| commit | `7cc68a0` على `genspark_ai_developer` (133 اختبارًا تمر) |
+| الرابط | https://www.genspark.ai/api/files/s/tQdN3gNF (bundle S08a، SHA-256 `f5690d891482423fcc4928f41efd6a4bccd8a0518c13a44e52b44ba2764f9a55`) |
+| commit | `1ecb5f3` على `genspark_ai_developer` (156 اختبارًا تمر) |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
@@ -29,4 +29,4 @@ GitHub OAuth غير متاح للأدوات (`No Valid GitHub Authorization Foun
 
 ## الحالة التالية
 
-S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). التالي: S08 release/cache/resources (الأجزاء الخالصة)؛ S04/S05 خارج الصندوق. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.
+S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). S08 مكتملة محليًا (registry/release/cache/admission/network؛ 23 اختبارًا؛ المجموع 156؛ evidence/s08_tests.md). ما خارج الصندوق موثق في docs/OUT_OF_SANDBOX.md. **المتبقي الوحيد داخل التفويض: PUB-02** — تفويض GitHub واحد ثم فحص remote → push عادي → PR واحد → تحقق.

@@ -19,9 +19,11 @@
 | S04/S05 | GATED_OWNER + OUT_OF_SANDBOX | read-only target ثم pilot مراقب؛ تحتاج JVM/GUI/عميل على جهاز المالك |
 | S06 | DONE_LOCAL | Telegram fake-first: RBAC default-deny، redaction/canary، outbox محدود، approval callbacks مقيّدة (T02/T03/T29 الخالصة)؛ 22 اختبارًا (evidence/s06_tests.md) |
 | S07 | DONE_LOCAL | AI advisory fake-first: consent/redaction/حدود حجم-عمر-ميزانية-مهلة، مخرجات AIProposal فقط بلا سلطة تنفيذ، الحقن لا يمنح سلطة؛ 14 اختبارًا (evidence/s07_tests.md) |
-| S08 | NEXT | release/cache/resources: manifest موقّع بالبصمة، allowlist/hash للـ artifacts، كاش محدود بالحجم/العمر، حصص موارد/مساحة احتياطية (T29 المتبقي، T31/T32 الخالصة) |
+| S08 | DONE_LOCAL | registry quarantine، manifest ثابت + خط إصدار صارم مع rollback متوافق أو STOP، كاش محدود بلا مسارات هوية، admission بقياس/احتياطي، سياسة شبكة بلا fallback محظور (T14/T15/T18/T19/T32 الخالصة)؛ 23 اختبارًا (evidence/s08_tests.md)؛ canary حي غير مُنمذج |
+| OOS-01 | DONE_LOCAL | docs/OUT_OF_SANDBOX.md: القرارات المفتوحة، V01–V08، S04/S05، مصفوفة T01–T35، متطلبات النشر |
+| FINAL-01 | READY_FOR_OWNER | كل الشرائح الممكنة محليًا منجزة (156 اختبارًا). الخطوة الوحيدة المتبقية داخل التفويض: PUB-02 بعد تفويض GitHub واحد |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
-كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ اختبارات S01 تغطي أجزاء T20/T05/T26 الخالصة فقط وتُسجَّل عند نجاحها.
+كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ الاختبارات المحلية (156) تغطي منطق القرار الخالص فقط — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
 
-عند «تابع»: نفّذ دورة الاستئناف في RESUME_PROTOCOL §1 ثم أول مهمة غير مكتملة. لا تبدأ GitHub قبل النهاية.
+عند «تابع»: نفّذ دورة الاستئناف في RESUME_PROTOCOL §1. المهمة التالية الوحيدة: PUB-02 عند توفر تفويض GitHub (طلب واحد للمالك).

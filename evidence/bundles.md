@@ -4,6 +4,8 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 21:40 | `1ecb5f3` (genspark_ai_developer) | `f5690d891482423fcc4928f41efd6a4bccd8a0518c13a44e52b44ba2764f9a55` | https://www.genspark.ai/api/files/s/tQdN3gNF | S08a: release.py + test_release.py (23)؛ 156 اختبارًا |
+| 2026-10-23 21:25 | `6b2e86b` (genspark_ai_developer) | `074637d79c55a4e9f5ddace62ee81e1f394abb193169cb4990977e59509cef0d` | https://www.genspark.ai/api/files/s/xc5kEhDI | S07b: أدلة S07. استُعيدت بنجاح بعد المسح الثالث عشر |
 | 2026-10-23 21:15 | `7cc68a0` (genspark_ai_developer) | `486fe9200c2fd3421e64b8a305c6d5e29ae906065adb1b8f96375eb6411829f3` | https://www.genspark.ai/api/files/s/MjCyzjJ3 | S07a: advisor.py + test_advisor.py (14)؛ 133 اختبارًا |
 | 2026-10-23 21:00 | `133861b` (genspark_ai_developer) | `7083c43de8c98b04814f25d42798fb43b82927fbd14a9668dacb673c6410b826` | https://www.genspark.ai/api/files/s/i6glfxEM | S06c: أدلة S06 + فصل صفوف TASKS. استُعيدت بنجاح بعد المسح الثاني عشر |
 | 2026-10-23 20:50 | `e2087e7` (genspark_ai_developer) | `649c641be5054cbeda84b93ece38d1325c54041aa38e8627602ce139a98cdf7f` | https://www.genspark.ai/api/files/s/wx2sCUVk | S06a: telegram.py + test_telegram.py (22)؛ 119 اختبارًا |
