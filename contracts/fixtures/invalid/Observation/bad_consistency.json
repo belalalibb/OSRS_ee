@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "observation_id": "obs_demo001",
+  "account_id": "acc_demo001",
+  "client_instance_id": "client_demo001",
+  "session_epoch": 3,
+  "observed_at": "2026-10-23T19:00:00Z",
+  "state_version": 7,
+  "consistency": "ATOMIC",
+  "fields": {
+    "client.logged_in": {
+      "quality": "KNOWN",
+      "source": "agent.status",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": true
+    },
+    "bank.open": {
+      "quality": "KNOWN",
+      "source": "agent.bank",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": true
+    },
+    "bank.items": {
+      "quality": "KNOWN",
+      "source": "agent.bank",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": [
+        [
+          995,
+          1200
+        ],
+        [
+          1511,
+          40
+        ]
+      ]
+    },
+    "inventory.items": {
+      "quality": "KNOWN",
+      "source": "agent.inventory",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": []
+    },
+    "player.position": {
+      "quality": "STALE",
+      "source": "agent.player",
+      "observed_at": "2026-10-23T18:59:00Z",
+      "value": [
+        3222,
+        3218,
+        0
+      ]
+    },
+    "varp.281": {
+      "quality": "UNKNOWN",
+      "source": "agent.varp",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": null
+    }
+  }
+}

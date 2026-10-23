@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "incident_id": "incident_demo001",
+  "account_id": "acc_demo001",
+  "session_epoch": 3,
+  "observed_state_version": 7,
+  "diagnosis": "Requires operator review",
+  "suggested_action": "WITHDRAW_ALL",
+  "parameters": {},
+  "requires_human_approval": true,
+  "confidence": 0.5
+}
