@@ -29,4 +29,4 @@ GitHub OAuth غير متاح للأدوات (`No Valid GitHub Authorization Foun
 
 ## الحالة التالية
 
-S01 (pure contracts: schemas/fixtures/validation/context guards + اختبارات offline) تبدأ فور حفظ هذه النسخة في حزمة متحققة. بعدها S02 يحتاج قرار ADR-003 صريحًا. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.
+S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). التالي: ADR-003 storage ثم S02 Store/leases/journal/recovery. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.
