@@ -4,6 +4,8 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 21:15 | `7cc68a0` (genspark_ai_developer) | `486fe9200c2fd3421e64b8a305c6d5e29ae906065adb1b8f96375eb6411829f3` | https://www.genspark.ai/api/files/s/MjCyzjJ3 | S07a: advisor.py + test_advisor.py (14)؛ 133 اختبارًا |
+| 2026-10-23 21:00 | `133861b` (genspark_ai_developer) | `7083c43de8c98b04814f25d42798fb43b82927fbd14a9668dacb673c6410b826` | https://www.genspark.ai/api/files/s/i6glfxEM | S06c: أدلة S06 + فصل صفوف TASKS. استُعيدت بنجاح بعد المسح الثاني عشر |
 | 2026-10-23 20:50 | `e2087e7` (genspark_ai_developer) | `649c641be5054cbeda84b93ece38d1325c54041aa38e8627602ce139a98cdf7f` | https://www.genspark.ai/api/files/s/wx2sCUVk | S06a: telegram.py + test_telegram.py (22)؛ 119 اختبارًا |
 | 2026-10-23 20:30 | `67958f2` (genspark_ai_developer) | `33561a5bc0f029eaa927466bc5d512221ce58a264e9b6395693480c28497e14e` | https://www.genspark.ai/api/files/s/Q58PyjGg | S03b: أدلة S03. استُعيدت بنجاح بعد المسح الحادي عشر |
 | 2026-10-23 20:20 | `21976d5` (genspark_ai_developer) | `41410350f3e6c6ab5f12f4175907cd594c04fef974d431120ed35fe6acf08c95` | https://www.genspark.ai/api/files/s/qEzrvMmO | S03a: worker.py + test_worker.py (20)؛ 97 اختبارًا |

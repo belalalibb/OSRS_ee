@@ -18,8 +18,8 @@
 | S03 | DONE_LOCAL | worker/scheduler + fake adapter + cancellation + health (الأجزاء الخالصة من T16/T17/T21/T29) فوق Store؛ concurrency=1؛ لا game I/O؛ 20 اختبارًا (evidence/s03_tests.md) |
 | S04/S05 | GATED_OWNER + OUT_OF_SANDBOX | read-only target ثم pilot مراقب؛ تحتاج JVM/GUI/عميل على جهاز المالك |
 | S06 | DONE_LOCAL | Telegram fake-first: RBAC default-deny، redaction/canary، outbox محدود، approval callbacks مقيّدة (T02/T03/T29 الخالصة)؛ 22 اختبارًا (evidence/s06_tests.md) |
-| S07 | NEXT | AI advisory: fake provider، consent/redaction/حدود حجم-عمر-ميزانية-مهلة، مخرجات AIProposal فقط بلا سلطة تنفيذ |
-| S08 | PLANNED | release/cache/resources |
+| S07 | DONE_LOCAL | AI advisory fake-first: consent/redaction/حدود حجم-عمر-ميزانية-مهلة، مخرجات AIProposal فقط بلا سلطة تنفيذ، الحقن لا يمنح سلطة؛ 14 اختبارًا (evidence/s07_tests.md) |
+| S08 | NEXT | release/cache/resources: manifest موقّع بالبصمة، allowlist/hash للـ artifacts، كاش محدود بالحجم/العمر، حصص موارد/مساحة احتياطية (T29 المتبقي، T31/T32 الخالصة) |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
 كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ اختبارات S01 تغطي أجزاء T20/T05/T26 الخالصة فقط وتُسجَّل عند نجاحها.
