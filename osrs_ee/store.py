@@ -45,12 +45,12 @@ ALLOWED_TRANSITIONS: dict[str, frozenset[str]] = {
     "NEW": frozenset({"PENDING_DISCOVERY", "DISABLED"}),
     "PENDING_DISCOVERY": frozenset({"DISCOVERING", "DISABLED"}),
     "DISCOVERING": frozenset({"READY", "BLOCKED", "RECOVERY_REQUIRED", "DISABLED"}),
-    "READY": frozenset({"LEASED", "BLOCKED", "DISABLED"}),
+    "READY": frozenset({"LEASED", "BLOCKED", "RECOVERY_REQUIRED", "DISABLED"}),
     "LEASED": frozenset({"STARTING", "RECOVERY_REQUIRED", "DISABLED"}),
     "STARTING": frozenset({"RUNNING", "RECOVERY_REQUIRED", "DISABLED"}),
     "RUNNING": frozenset({"DRAINING", "BLOCKED", "RECOVERY_REQUIRED", "DISABLED"}),
     "DRAINING": frozenset({"RESTING", "RECOVERY_REQUIRED", "DISABLED"}),
-    "RESTING": frozenset({"READY", "DISABLED"}),
+    "RESTING": frozenset({"READY", "RECOVERY_REQUIRED", "DISABLED"}),
     "BLOCKED": frozenset({"RECONCILING", "DISABLED"}),
     "RECOVERY_REQUIRED": frozenset({"RECONCILING", "DISABLED"}),
     "RECONCILING": frozenset({"RESTING", "READY", "RECOVERY_REQUIRED", "BLOCKED", "DISABLED"}),
@@ -118,6 +118,7 @@ class CommandRow:
     session_epoch: int
     payload_hash: str
     phase: str
+    finished_at: Optional[str] = None
 
 
 def _iso(dt: datetime) -> str:
@@ -306,7 +307,7 @@ class Store:
 
     @staticmethod
     def _row(r: sqlite3.Row) -> CommandRow:
-        return CommandRow(r["command_id"], r["account_id"], r["session_id"], r["lease_id"], r["session_epoch"], r["payload_hash"], r["phase"])
+        return CommandRow(r["command_id"], r["account_id"], r["session_id"], r["lease_id"], r["session_epoch"], r["payload_hash"], r["phase"], r["finished_at"])
 
     def get_command(self, command_id: str) -> CommandRow:
         r = self._conn.execute("SELECT * FROM commands WHERE command_id=?", (command_id,)).fetchone()
@@ -420,12 +421,9 @@ class Store:
                 acc_id = r["account_id"]
                 self._conn.execute("UPDATE commands SET phase='UNKNOWN' WHERE account_id=? AND phase IN ('DISPATCHING','ACKNOWLEDGED')", (acc_id,))
                 acc = self.get_account(acc_id)
-                if acc.state not in ("RECOVERY_REQUIRED", "DISABLED", "RECONCILING"):
-                    if "RECOVERY_REQUIRED" in ALLOWED_TRANSITIONS[acc.state]:
-                        self._transition_locked(acc_id, "RECOVERY_REQUIRED", acc.state_version, "recover(): in-flight command", now)
-                    else:
-                        # States without a direct edge (e.g. READY/RESTING with a stale in-flight row) go via BLOCKED.
-                        self._transition_locked(acc_id, "BLOCKED", acc.state_version, "recover(): in-flight command (no direct edge)", now)
+                if acc.state not in ("RECOVERY_REQUIRED", "DISABLED", "RECONCILING", "BLOCKED"):
+                    # Every non-terminal operational state has a direct edge to RECOVERY_REQUIRED (FOUNDATION §5).
+                    self._transition_locked(acc_id, "RECOVERY_REQUIRED", acc.state_version, "recover(): in-flight command", now)
                 affected.append(acc_id)
             # Accounts in active-session states without an active lease are inconsistent.
             rows = self._conn.execute(

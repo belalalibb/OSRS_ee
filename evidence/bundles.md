@@ -4,6 +4,9 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 19:40 | `8bc09d7` (genspark_ai_developer) | `0f41e7e233f0820dc33cd2cf9bc53c1f226e1f1dd15bf8d99aada366026ad321` | https://www.genspark.ai/api/files/s/kwYpDoXC | S02b: test_store.py (19)؛ 62 اختبارًا تمر. استُعيدت بنجاح بعد المسح التاسع |
+| 2026-10-23 19:30 | `c1473c8` (genspark_ai_developer) | `42dda889c13d19fef6022e60c1dd9953a658f84868d575c79bb0db8141bda882` | https://www.genspark.ai/api/files/s/nUOIwBX9 | S02a: store.py + store_schema.sql (ADR-003 = SQLite) |
+| 2026-10-23 19:10 | `dfeb0c7` (genspark_ai_developer) | `ae33fd8458662f4ef5f85f960ab369e300426142a95eab1e6c4f92b8e2fa599f` | https://www.genspark.ai/api/files/s/q4pzKLsp | S01d: تسجيل حزم S01a/b/c في PROGRESS |
 | 2026-10-23 19:05 | `4263f4e` (genspark_ai_developer) | `02d3419b688c2b749e038d80b738071d7f482b9083279a38d5ba7ec9611e48bd` | https://www.genspark.ai/api/files/s/yoCAYEEl | S01c: guard tests + evidence؛ 43 اختبارًا تمر؛ S01 DONE_LOCAL |
 | 2026-10-23 18:57 | `b092883` (genspark_ai_developer) | `b333e5de36915413ce470c0a0af73965047b6a9fde8bf1958f010cc5b1325ded` | https://www.genspark.ai/api/files/s/WuwvZ5Bc | S01b: guards + 48 fixtures + harness؛ 16 اختبارًا |
 | 2026-10-23 18:55 | `f8d2467` (genspark_ai_developer) | `f2efec96d94014ac64c3850856144e1350eb544c7b5ee32187ead3ea7e8df511` | https://www.genspark.ai/api/files/s/GUj06fMK | S01a: schemas + validator + canonical |

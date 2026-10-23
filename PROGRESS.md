@@ -29,4 +29,4 @@ GitHub OAuth غير متاح للأدوات (`No Valid GitHub Authorization Foun
 
 ## الحالة التالية
 
-S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). التالي: ADR-003 storage ثم S02 Store/leases/journal/recovery. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.
+S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). التالي: S03 worker/scheduler/fake adapter/cancellation/health. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.

@@ -14,8 +14,8 @@
 | DEC-STORE | DECIDED | ADR-003 = SQLite (قرار المالك 2026-10-23) |
 | DEC-OS/AUTH | OPEN | ADR-007/008 قبل process/GUI/auth integration |
 | S01 | DONE_LOCAL | 5 عقود JSON Schema 2020-12 + validator صارم + canonical hashing + guards خالصة؛ 48 fixtures؛ 43 اختبارًا offline تمر (evidence/s01_tests.md) |
-| S02 | IN_PROGRESS | Store SQLite: accounts/sessions/leases/commands/events/approvals + journal + dedupe + recovery؛ اختبارات T04/T07/T08/T09 الخالصة مع persistent fake |
-| S03 | BLOCKED_DEPENDENCIES | Store/journal/leases/recovery ثم fake runtime؛ لا game I/O |
+| S02 | DONE_LOCAL | Store SQLite: accounts/sessions/leases/commands/events/approvals + journal + dedupe + recovery؛ اختبارات T04/T07/T08/T09 الخالصة مع persistent fake |
+| S03 | NEXT | worker/scheduler + fake adapter + cancellation + health (الأجزاء الخالصة من T16/T17/T21/T29) فوق Store؛ concurrency=1؛ لا game I/O |
 | S04/S05 | GATED_OWNER + OUT_OF_SANDBOX | read-only target ثم pilot مراقب؛ تحتاج JVM/GUI/عميل على جهاز المالك |
 | S06/S07/S08 | PLANNED | Telegram مضبوط، AI advisory، release/cache/resources |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |

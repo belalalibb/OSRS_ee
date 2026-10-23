@@ -185,7 +185,7 @@ Read→decide→durable PREPARED→DISPATCHING قبلnetwork→ACKNOWLEDGED→fr
 | DRAINING | quiescence/exit مثبت،delta مرة،lease release | RESTING |
 | RESTING | انقضاءالراحةوإعادةفحص | READY |
 | RUNNING | عائقمعروفوأثر/ملكيةمضبوطان | BLOCKED |
-| أيحالةتشغيل/اكتشاف | crash/lease/identity uncertainty وسحبالأفعال | RECOVERY_REQUIRED |
+| أيحالةتشغيل/اكتشاف/READY/RESTING | crash/lease/identity uncertainty أو أثر in-flight مكتشف عند recover() وسحبالأفعال | RECOVERY_REQUIRED |
 | BLOCKED | approval صالحةعندلزومها | RECONCILING |
 | RECOVERY_REQUIRED | منعالقديموبدءمراجعةالأوامر | RECONCILING |
 | RECONCILING | الشروطمثبتة | RESTING أوREADY حسبcooldown |
