@@ -7,6 +7,12 @@ What this CLI can do today (all offline, no game client, no Telegram, no AI prov
   store show  — print accounts, active leases and journal phase counts
   demo        — run the end-to-end *simulated* loop (FakeAdapter/FakeTransport/FakeProvider)
                 against a temporary store and print the journal; proves wiring, not the game
+  target-check — inventory a candidate target machine (OS/Python/Java/client path/display/disk);
+                launches nothing; lists what is still missing for S04b
+  conformance — run the adapter conformance suite against the built-in FakeAdapter (or a
+                recorded trace via --trace); the real S04b adapter will be run through the same suite
+  replay      — replay a redacted JSONL adapter trace through the worker on a temp store;
+                exercises worker logic on captured data without any client
 
 What it deliberately does NOT do: launch a JVM/GUI/game client, log into any account,
 talk to Telegram or an AI provider. Those components do not exist yet (see docs/ROADMAP.md,
@@ -44,7 +50,8 @@ def cmd_status(_args: argparse.Namespace) -> int:
             "telegram control plane": "REAL logic; transport is FAKE only",
             "ai advisor": "REAL logic; provider is FAKE only",
             "release/cache/admission/network policy": "REAL logic; measurements are injected",
-            "game client adapter / JVM / GUI supervisor": "NOT IMPLEMENTED (S04/S05; needs target machine + ADR-007/008)",
+            "adapter tooling (recording/replay/conformance/target-check)": "REAL (offline; S04a)",
+            "game client adapter / JVM / GUI supervisor": "NOT IMPLEMENTED (S04b/S04c/S05; needs target machine + ADR-007/008)",
         },
     }
     print(json.dumps(info, indent=2, ensure_ascii=False))
@@ -151,6 +158,85 @@ def cmd_demo(_args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_target_check(args: argparse.Namespace) -> int:
+    from osrs_ee.target_check import run_target_check
+    rep = run_target_check(client_path=args.client, data_dir=args.data_dir, run_java_probe=not args.no_java_probe)
+    print(json.dumps(rep.to_dict(), indent=2, ensure_ascii=False))
+    return EXIT_OK if rep.ready_for_s04b else EXIT_INVALID
+
+
+def _demo_fixtures() -> tuple[dict, dict]:
+    fixtures = contracts.SCHEMA_DIR.parent / "fixtures" / "valid"
+    obs = json.loads((fixtures / "Observation" / "basic.json").read_text())
+    intent = json.loads((fixtures / "CommandIntent" / "bank_withdraw.json").read_text())
+    return obs, intent
+
+
+def cmd_conformance(args: argparse.Namespace) -> int:
+    from osrs_ee import worker
+    from osrs_ee.adapters import ReplayAdapter, run_conformance
+    t0 = _now()
+    if args.trace:
+        adapter = ReplayAdapter.from_file(Path(args.trace), strict=False)
+        name = f"ReplayAdapter({args.trace})"
+    else:
+        obs, _ = _demo_fixtures()
+        obs["observed_at"] = t0.strftime("%Y-%m-%dT%H:%M:%SZ")
+        for f in obs["fields"].values():
+            f["observed_at"] = obs["observed_at"]
+        adapter = worker.FakeAdapter(obs).script(worker.AdapterResponse("ACKNOWLEDGED", "VERIFIED", ("obs_probe",)))
+        name = "FakeAdapter (built-in; proves the suite, not a client)"
+    rep = run_conformance(adapter, now=t0, name=name)
+    print(json.dumps(rep.to_dict(), indent=2, ensure_ascii=False))
+    return EXIT_OK if rep.passed else EXIT_INVALID
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    """Drive the worker with a ReplayAdapter on a temporary store. The trace must be
+    redacted (header.redacted == true); intents are rebuilt from the trace's dispatch records."""
+    import tempfile
+    from osrs_ee import worker
+    from osrs_ee.adapters import ReplayAdapter, load_trace
+    from osrs_ee.store import Store
+    records = load_trace(Path(args.trace))
+    adapter = ReplayAdapter(records, strict=True)
+    first_obs = next(r for r in records if r["t"] == "observe")["observation"]
+    dispatches = [r for r in records if r["t"] == "dispatch"]
+    t0 = _now()
+    acc = first_obs["account_id"]
+    with tempfile.TemporaryDirectory() as d:
+        s = Store.open(Path(d) / "replay.sqlite", now=t0)
+        s.create_account(acc, "replay", "UNKNOWN", "ref:vault:replay", now=t0)
+        v = 0
+        for state in ("PENDING_DISCOVERY", "DISCOVERING", "READY"):
+            s.transition(acc, state, expected_version=v, reason="replay", now=t0); v += 1
+        lease_id = dispatches[0]["intent"]["lease_id"] if dispatches else "lease_replay01"
+        session_id = dispatches[0]["intent"]["session_id"] if dispatches else "sess_replay01"
+        s.acquire_lease(acc, lease_id=lease_id, session_id=session_id, client_instance_id=first_obs["client_instance_id"],
+                        expected_version=v, ttl_seconds=3600, now=t0)
+        cfg_hash = dispatches[0]["intent"]["config_hash"] if dispatches else "0" * 64
+        w = worker.Worker(s, adapter, acc, worker.WorkerConfig(config_hash=cfg_hash, policy_version=1,
+                                                               observation_max_age_seconds=10 ** 9))
+        ctx = w.start(now=t0)
+        results = []
+        for rec in dispatches:
+            intent = dict(rec["intent"])
+            intent.update(session_epoch=ctx.session_epoch, expected_state_version=ctx.state_version,
+                          issued_at=t0.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                          expires_at=(t0 + timedelta(seconds=30)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+            w.enqueue(intent)
+            step = w.step(now=t0 + timedelta(seconds=1))
+            results.append({"command_id": step.command_id, "outcome": step.outcome, "phase": step.phase, "reason": step.reason_code})
+            ctx = w.context()
+        w.request_abort()
+        final = w.drain(now=t0 + timedelta(seconds=2))
+        print(json.dumps({"mode": "REPLAY (recorded, redacted trace; no client)", "trace": args.trace,
+                          "served": {"observes": adapter.served_observes, "dispatches": adapter.served_dispatches},
+                          "steps": results, "final_account_state": final}, indent=2, ensure_ascii=False))
+        s.close()
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="osrs-ee", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -163,6 +249,17 @@ def build_parser() -> argparse.ArgumentParser:
     i = st.add_parser("init", help="create/open store and run recovery"); i.add_argument("path"); i.set_defaults(fn=cmd_store_init)
     sh = st.add_parser("show", help="print accounts/leases/journal"); sh.add_argument("path"); sh.set_defaults(fn=cmd_store_show)
     sub.add_parser("demo", help="simulated end-to-end loop on a temp store (no game, no network)").set_defaults(fn=cmd_demo)
+    tc = sub.add_parser("target-check", help="inventory a target machine for S04b; launches nothing")
+    tc.add_argument("--client", help="path to the game client (ADR-007)")
+    tc.add_argument("--data-dir", help="directory for store/logs (disk check)")
+    tc.add_argument("--no-java-probe", action="store_true", help="do not run `java -version`")
+    tc.set_defaults(fn=cmd_target_check)
+    cf = sub.add_parser("conformance", help="adapter conformance suite (FakeAdapter or --trace)")
+    cf.add_argument("--trace", help="redacted JSONL trace to run the suite against")
+    cf.set_defaults(fn=cmd_conformance)
+    rp = sub.add_parser("replay", help="replay a redacted adapter trace through the worker (temp store)")
+    rp.add_argument("trace")
+    rp.set_defaults(fn=cmd_replay)
     return p
 
 
