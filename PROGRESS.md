@@ -1,8 +1,12 @@
 # نقطة الاستئناف — OSRS_ee
 
-الحالة: LOCAL_COMPLETE_FOR_SANDBOX / NOT_PUSHED (156 اختبارًا offline تمر؛ المتبقي داخل التفويض: PUB-02 فقط). الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
+الحالة: PUBLISHED_TO_BRANCH / PR_OPEN. `genspark_ai_developer` على GitHub = HEAD المحلي؛ `main` = `3740096f` (لم يُدمج بعد؛ PR #1 بانتظار المالك). 156 اختبارًا offline تمر محليًا ومن clone جديد. الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
 
-## آخر حزمة استعادة (ابدأ من هنا عند «تابع»)
+## مصدر الاستئناف الأساسي (2026-10-23 فصاعدًا)
+
+`git clone https://github.com/belalalibb/OSRS_ee.git && git checkout genspark_ai_developer` → `python3 -m pytest tests -q` (توقع 156). PR: https://github.com/belalalibb/OSRS_ee/pull/1. الحزم أدناه احتياطي عند فقد التفويض.
+
+## آخر حزمة استعادة (احتياطي)
 
 | الحقل | القيمة |
 |---|---|
@@ -29,4 +33,4 @@ GitHub OAuth غير متاح للأدوات (`No Valid GitHub Authorization Foun
 
 ## الحالة التالية
 
-S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). S08 مكتملة محليًا (registry/release/cache/admission/network؛ 23 اختبارًا؛ المجموع 156؛ evidence/s08_tests.md). ما خارج الصندوق موثق في docs/OUT_OF_SANDBOX.md. **المتبقي الوحيد داخل التفويض: PUB-02** — تفويض GitHub واحد ثم فحص remote → push عادي → PR واحد → تحقق.
+S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). S08 مكتملة محليًا (registry/release/cache/admission/network؛ 23 اختبارًا؛ المجموع 156؛ evidence/s08_tests.md). ما خارج الصندوق موثق في docs/OUT_OF_SANDBOX.md. PUB-02 منجز 2026-10-23: remote كان فارغًا؛ push عادي لـ main وgenspark_ai_developer؛ PR #1 مفتوح؛ تحقق من clone جديد (شجرة مطابقة، 156 اختبارًا). المتبقي للمالك: دمج PR، إبطال المفاتيح المكشوفة، قرارات ADR-007/008، S04/S05 على جهاز حقيقي.
