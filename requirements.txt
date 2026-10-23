@@ -1,0 +1,2 @@
+# Runtime dependency of the local core (osrs_ee/). Everything else is stdlib.
+jsonschema>=4.18,<5
