@@ -10,8 +10,8 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/9aieKrdt (bundle d02، SHA-256 `08af7d5ce7c2536244876545e6c37f5ccaeedf53ddb5460945c01c415ad7fdb1`) — يُستبدل بـ d03 بعد commit هذا التصحيح (الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا) |
-| commit | `dc51bea` على `genspark_ai_developer` (161 اختبارًا تمر) |
+| الرابط | https://www.genspark.ai/api/files/s/5UjzVpjR (bundle d03، SHA-256 `fa08e6c55623fbd44a3376a877937e016c247172ab9a8fa577cc464387b51ee7`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
+| commit | `7bb1683` على `genspark_ai_developer` (161 اختبارًا تمر؛ remote GitHub ما زال عند `6552b84`) |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
