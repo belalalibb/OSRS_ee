@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "validated_at_utc": "2026-10-23T17:31:48.684658+00:00",
+  "scope": "DOCUMENTATION_ONLY",
+  "status": "PASS",
+  "checks": {
+    "issues_35": true,
+    "proposed_tests_35": true,
+    "F01_F29_provenance": true,
+    "R1_crosswalk_13": true,
+    "R2_crosswalk_16": true,
+    "V01_V08_present": true,
+    "ADRs_12_present": true
+  },
+  "json_examples_parsed": 1,
+  "local_links_checked": 5,
+  "limited_secret_pattern_scan": "PASS_NOT_A_COMPREHENSIVE_SECRET_AUDIT",
+  "ignore_probes_passed": [
+    ".research/M.md",
+    ".env",
+    ".dev.vars",
+    "accounts_database.json",
+    "accounts.txt",
+    "logs/incidents.jsonl",
+    "credentials.properties",
+    "state.sqlite",
+    "out.zip",
+    "out.bundle"
+  ],
+  "source_report_hashes": "HISTORICAL_NOT_REVERIFIED_THIS_RECOVERY",
+  "upstream_checks": "V01_V08_NOT_RUN",
+  "application_tests": "T01_T35_NOT_RUN",
+  "github": "NOT_PUSHED_RECONNECT_REQUIRED",
+  "file_sha256": {
+    ".gitignore": "480ddb6f3de2d7c2fc52f1b9b7b37d8217ba0c29adb240cd9ed9f6da6682f7c1",
+    "README.md": "003c005f1cd4e6099d03f2d23235c7b93cfa3b2c58cfd36ae1a2371d494d1066",
+    "PROGRESS.md": "82aa329a29c362f379a93eaf887ed185b2c04a4e51a05a3e222a426e1691d7e7",
+    "TASKS.md": "cc7cbbc7f1c0e36cb27cb2cba74c1d8c5dbfdcb15abfbbf324b4669a32ffd168",
+    "docs/FOUNDATION.md": "92f5f8e0d0ff87665a7a9718efacc72b721cdf11f4b183a06cea68afd27e5afa",
+    "docs/RESUME_PROTOCOL.md": "2fc2302ad03f1d5298f2c75fcde307825d971a95269f3622c63b1b267c5d54f0"
+  },
+  "method": "Python assertions: exact ordered U01-U35 and T01-T35 rows; 29 M:F refs; 13 R1/16 R2 crosswalk rows; V01-V08; ADR001-012; JSON fences via json.loads; relative links resolved within workspace; replacement-character rejection; five secret-pattern families; git check-ignore probes. This file excludes its own hash; delivery manifest covers it."
+}
