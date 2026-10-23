@@ -4,6 +4,10 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-23 23:20 | `dc51bea` (genspark_ai_developer) | `08af7d5ce7c2536244876545e6c37f5ccaeedf53ddb5460945c01c415ad7fdb1` | https://www.genspark.ai/api/files/s/9aieKrdt | d02: RUNBOOK + ROADMAP؛ 161 اختبارًا؛ استُعيدت بنجاح بعد المسح 17 |
+| 2026-10-23 23:05 | `7a63ebc` (genspark_ai_developer) | `678eee550d9f483d0abe40b6cab8c18642fb80770a2d04fe11eae8f74ccb57e2` | https://www.genspark.ai/api/files/s/KDw02tMS | d01: pyproject/requirements/CLI + test_cli (5)؛ 161 اختبارًا |
+| 2026-10-23 21:55 | `6552b84` (genspark_ai_developer; = remote GitHub) | `fec2a8419e13e5d1588e3086a48274d8789ce755424c4b77dc581676ba182d15` | https://www.genspark.ai/api/files/s/PB8i2dkS | pub: توثيق PUB-02 (PR #1)؛ آخر commit مدفوع فعليًا إلى GitHub |
+| 2026-10-23 21:50 | `790ec2e` (genspark_ai_developer) | `cb7e96b8` (مختصر؛ الكامل في سجل المحادثة) | https://www.genspark.ai/api/files/s/z1oEHLj3 | S08b: أدلة S08 + OUT_OF_SANDBOX + README (156) |
 | 2026-10-23 21:40 | `1ecb5f3` (genspark_ai_developer) | `f5690d891482423fcc4928f41efd6a4bccd8a0518c13a44e52b44ba2764f9a55` | https://www.genspark.ai/api/files/s/tQdN3gNF | S08a: release.py + test_release.py (23)؛ 156 اختبارًا |
 | 2026-10-23 21:25 | `6b2e86b` (genspark_ai_developer) | `074637d79c55a4e9f5ddace62ee81e1f394abb193169cb4990977e59509cef0d` | https://www.genspark.ai/api/files/s/xc5kEhDI | S07b: أدلة S07. استُعيدت بنجاح بعد المسح الثالث عشر |
 | 2026-10-23 21:15 | `7cc68a0` (genspark_ai_developer) | `486fe9200c2fd3421e64b8a305c6d5e29ae906065adb1b8f96375eb6411829f3` | https://www.genspark.ai/api/files/s/MjCyzjJ3 | S07a: advisor.py + test_advisor.py (14)؛ 133 اختبارًا |

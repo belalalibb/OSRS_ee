@@ -1,6 +1,6 @@
 # OSRS_ee — الأساس الموحد القابل للاستعادة، 0.2
 
-**LOCAL_DRAFT / NOT_PUSHED — لا تطبيق منفذ ولا اختبارات تشغيل ناجحة للهدف.** هذه نسخة استعادة موحدة مكثفة من التحليل الموثق في المحادثة والتقارير المقروءة سابقًا؛ليست استعادة بايتية للـ13 ملفًا التي فقدت قبل commit/التسليم. جمعت الوثائق الحاكمة هنا لتقليل التكرار وخطر فقد العمل مرة أخرى.
+**PUBLISHED_TO_BRANCH (PR #1) — نواة محلية مختبرة (161 اختبار منطق قرار)؛ لا تطبيق متكامل منفذ ولا اختبارات تشغيل ناجحة للهدف.** الحالة التشغيلية في RUNBOOK والخطة في ROADMAP. هذه نسخة استعادة موحدة مكثفة من التحليل الموثق في المحادثة والتقارير المقروءة سابقًا؛ليست استعادة بايتية للـ13 ملفًا التي فقدت قبل commit/التسليم. جمعت الوثائق الحاكمة هنا لتقليل التكرار وخطر فقد العمل مرة أخرى.
 
 ## 1. السياق والتفويض
 
@@ -50,7 +50,7 @@ G قد يحتوي أسرارًا،لا تعِد نشره. D0–D6 تحت O/OSRS_
 
 ### تحقق المصدر المؤجل
 
-كل V01–V08 NOT_RUN/AUTH_BLOCKED. بعدReconnect ثبتSHA لكلقراءة ولا تنسبmain الجديد إلىrevision قديم.
+كل V01–V08 REPORTED_UNVERIFIED (NOT_RUN)؛ تحتاج source revisions مثبتة وجهاز تحقق، لا تُغلق بقراءة التقارير. عند التنفيذ ثبت SHA لكل قراءة ولا تنسب main الجديد إلى revision قديم.
 
 | ID | الادعاء ومصدره | تحقق مطلوب |
 |---|---|---|
@@ -225,7 +225,7 @@ Storage pending: SQLite transactions/constraints/WAL/synchronous بحسبالم�
 
 ## 7. الأمن والخصوصية
 
-آخرردمنصةGitHub: Reconnect Required؛لاتكرارsetup أوremote قبلتأكيدالمالكReconnect فيGenspark. الاعتمادالمكشوفلم يستخدمأويحفظ،الإلغاءNOT_CONFIRMED؛لاsecret أوhash لهفيrepository. حذفالنصلايلغيالاعتماد. لاforce push لإعادةكتابةالتاريخبلاخطةوتفويض.
+GitHub: التفويض نجح مرة 2026-10-23 (push عادي للفرعين، PR #1، تحقق من clone جديد) ثم أُبطل؛ التفويض متقطع ويُحاول مرة واحدة في كل جلسة (RESUME_PROTOCOL 0.4)، والحزم احتياطي. الاعتمادالمكشوفلم يستخدمأويحفظ،الإلغاءNOT_CONFIRMED؛لاsecret أوhash لهفيrepository. حذفالنصلايلغيالاعتماد. لاforce push لإعادةكتابةالتاريخبلاخطةوتفويض.
 
 لاpassword/session/proxy credentials فيGit/Telegram/AI/screenshots/logs/state العام؛refs/aliases فقط. 2FA/PIN عبرواجهةرسميةمحلية. لاspoiler+delete workaround. وراثةenvironment أدنىحد،لاsecret CLI args حيثتظهرللعمليات. ignore مساعدلاACL/تشفيرولاحمايةلمتتبع.
 
@@ -239,8 +239,8 @@ Storage pending: SQLite transactions/constraints/WAL/synchronous بحسبالم�
 |---|---|---|
 | DOC-01/02 | تجميعالمصادر/الأدلةوالسجلوالعقودوالخطة | تغطية29F/13R1/16R2،تمييزH/D/R/P |
 | DOC-03 | validate/local commit/archive | فحصفعليوبصماتوحزمةمنقحة |
-| AUTH-01/PUB-01 | المالكReconnect ثمsetup وفحصremote الحالي،normal push | SHA وشجرةومحتوىبالSHA متحققة؛لاافتراضremote empty |
-| S01 | بعدPUB: schemas/fixtures/pure context guards | T20 وpure T05/T26،لاStore/network/Java |
+| AUTH-01/PUB-02 | DONE 2026-10-23: فُحص remote (فارغ فعلًا)، push عادي، PR #1، تحقق clone | SHA وشجرة ومحتوى متحققة؛ الدفعات اللاحقة عند توفر التفويض (INTERMITTENT) |
+| S01 | DONE_LOCAL: schemas/fixtures/pure context guards | T20 وpure T05/T26،لاStore/network/Java |
 | S02 | S01+ADR-003 صريح؛Store/leases/journal/dedupe/recovery | T04/T07/T08/T09 معpersistent fake/restore |
 | S03 | worker/scheduler/fake adapter/cancellation/health | T16/T17/T21/T29؛concurrency1 |
 | VERIFY-01 | بعدAUTH: V01–V08 pinned source | source evidence لالive proof |
