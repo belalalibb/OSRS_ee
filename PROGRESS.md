@@ -1,22 +1,27 @@
 # نقطة الاستئناف — OSRS_ee
 
-الحالة LOCAL_DRAFT / NOT_PUSHED. الوجهة الوحيدة https://github.com/belalalibb/OSRS_ee.git،main. لا تطبيق أوحسابات شغلت أوWeb deployment.
+الحالة: LOCAL_DEVELOPMENT / NOT_PUSHED. الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
+
+## آخر حزمة استعادة (ابدأ من هنا عند «تابع»)
+
+| الحقل | القيمة |
+|---|---|
+| الرابط | *(يُملأ بعد رفع أول حزمة من هذه النسخة؛ حتى ذلك الحين: حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Wbh3j3VW ، SHA-256 `a973b8ecad4ce71290341ccdbf59115286ccd1a8330fd3d325c8a613b24a342e`، تحتوي checkpoint `3740096f`)* |
+| commit | `3740096f31d4977b5d5705c4dd7208166208908c` على `main` |
+| الفرع العامل | `genspark_ai_developer` (يبدأ من `3740096f`) |
+
+سجل الحزم الكامل في `evidence/bundles.md`. الحزمة الأحدث تحتوي دائمًا سجل سابقاتها.
 
 ## العائق الثابت
 
-آخر نتيجة GitHub: Reconnect Required؛التفويض المحفوظ ملغى. لا تعاود setup أوأيremote operation قبل تأكيد المالك إتمام Reconnect من إعدادات GitHub في Genspark. الاعتماد المكشوف لم يستخدم أو يحفظ؛طلب إلغائه،وحالة الإلغاء NOT_CONFIRMED. لا ترسل بديله.
+GitHub OAuth غير متاح للأدوات (`No Valid GitHub Authorization Found` بعد ربط المالك). المالك قرر عدم إعادة التفويض في كل مرحلة. SB-Git وAI Drive محجوبان بالخطة/غير مركّبين (ADR-013). **لا محاولة GitHub قبل النهاية وتأكيد المالك.** مفتاحان شخصيان نُشرا في المحادثة؛ لم يُستخدما؛ إلغاؤهما مطلوب وحالته NOT_CONFIRMED.
 
-## ما حدث فعليًا
+## ما حدث فعليًا (2026-10-23)
 
-الاستئناف الأخير وجد .git فقط،main بلاcommits وorigin/main [gone] علىفرعunborn؛ليس دليل حذف بعيد. فحصremote التاريخي وجدOSRS_ee فارغًا/main/public وصلاحيةpush،لكنه لم يعد التحقق منه حاليًا.
-
-الملفات السابقة فقدت قبل commit/archive. أُنشئت نسخة استعادة موحدة مكثفة0.2 في docs/FOUNDATION.md من التحليل الموثق،لا استعادة بايتية للـ13 ملفًا. أول حفظ دائم لهذه النسخة:
-https://www.genspark.ai/api/files/s/1PwghUNP
-
-تضم35 قضية OPEN،35 اختبارًا مقترحًا NOT_RUN،crosswalk كامل،حدودالأدلة والخلافات والقرارات والعقود والأمن والخطة. المصدر raw لم يعاد تنزيله في هذه الاستعادة الأخيرة؛بصماته ونتائج44mock tests تاريخية. claims جديدة عنvision/proxy/defaults/telemetry/auth/cache/autologin غيرمتحققة.
+- استُعيد checkpoint `3740096f` أربع مرات بعد مسح مساحة العمل؛ كل مرة بتحقق كامل من ZIP/manifests/bundle.
+- اختبار مسار الحفظ على مستودع تجريبي: bundle → رفع → حذف محلي → تنزيل → هاش مطابق → استعادة commit `e38fd045…` ناجحة.
+- اعتُمد مسار الحفظ المحلي (ADR-013) وحُدّث RESUME_PROTOCOL 0.3 وTASKS. لم يُعد كتابة FOUNDATION أو التدقيق.
 
 ## الحالة التالية
 
-DOC-03: نجح فحص النسخة الحالية:35قضية و35اختبارًا مقترحًا و29F و13R1 و16R2 و8V و12ADR ومثالJSON وscan محدود لأنماط الأسرار و10ignore probes. evidence/validation.json يحفظ الفحص النهائي وبصمات الملفات؛ليس اختبار التطبيق. الـcommit المحلي والحزمة يثبتهما git log وdelivery manifest ورابط التسليم بالمحادثة. لا تفترض نجاح push؛لا يوجد نشر بعيد متحقق. checkpoint يعرف بالـcommit الحاوي،والmanifest يسجلSHA خارجملفاته.
-
-بعدإكمالالتسليم: AUTH-01 ثمPUB-01 (فحصremote وحفظالتاريخ وnormal push وSHA+content verification). بعدهاابدأS01 offline دونموافقةعامةجديدة،لا قبلها. storage/OS/auth pending؛لالive أوfinancial actions. اقرأ TASKS.md وdocs/RESUME_PROTOCOL.md؛لا تعِدالتدقيقمنالصفر عند«تابع».
+S01 (pure contracts: schemas/fixtures/validation/context guards + اختبارات offline) تبدأ فور حفظ هذه النسخة في حزمة متحققة. بعدها S02 يحتاج قرار ADR-003 صريحًا. PUB-02 (push + PR + تحقق) مؤجل حتى التفويض النهائي.

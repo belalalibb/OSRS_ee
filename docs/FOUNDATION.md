@@ -160,6 +160,7 @@ P:A–G أدخلت تحليليًا في المعمارية والعقود وا�
 | ADR-010 | PROPOSED | sidecar اختياربعدV02/OS network tests؛ليسضمانًا |
 | ADR-011 | SCOPE_BASELINE | reported claims تبقىR؛44mocks ليستtarget/live evidence |
 | ADR-012 | PROPOSED | migrations versioned/backup/restore/quarantine؛لاREADY افتراضية |
+| ADR-013 | ACCEPTED 2026-10-23 | حفظ التقدم: commits محلية على `genspark_ai_developer` + `git bundle` متحقق (verify+SHA-256) يُرفع إلى رابط ملف دائم بعد كل شريحة ويُسجل في PROGRESS/evidence/bundles.md. السبب: مسح sandbox متكرر (4×/يوم)، OAuth غير متاح والمالك لا يعيده كل مرحلة، SB-Git/AI Drive محجوبان (CLI يتطلب خطة مدفوعة؛ /mnt/aidrive غير مركّب). البدائل المرفوضة: توكن منشور في المحادثة (مكشوف)، نشر مبكر إلى main. الأثر: PR مؤجل موثق (PUB-02)؛ الروابط تتطلب جلسة المالك؛ المحادثة هي السجل الخارجي. يُراجع عند توفر OAuth أو خطة. مثبت باختبار استعادة على مستودع تجريبي |
 
 SCOPE_BASELINE قرار هندسي محافظ ضمن التفويض لا موافقةمستخدمعلىكلتفصيل. «تابع» لا تحسمstorage/OS/auth. تعارضAgent default يحسمV03 بنفسSHA؛Windows sharing لايعُم؛heap/Xmx لاRSS؛reservations كميةللخطةلاكلeligible ولاyield name وحده؛sidecar ليسfirewall؛kill ليسserver logout؛javac/JIT ليساanti-ban دليلًا.
 
