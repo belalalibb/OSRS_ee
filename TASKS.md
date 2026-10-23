@@ -17,7 +17,9 @@
 | S02 | DONE_LOCAL | Store SQLite: accounts/sessions/leases/commands/events/approvals + journal + dedupe + recovery؛ اختبارات T04/T07/T08/T09 الخالصة مع persistent fake |
 | S03 | DONE_LOCAL | worker/scheduler + fake adapter + cancellation + health (الأجزاء الخالصة من T16/T17/T21/T29) فوق Store؛ concurrency=1؛ لا game I/O؛ 20 اختبارًا (evidence/s03_tests.md) |
 | S04/S05 | GATED_OWNER + OUT_OF_SANDBOX | read-only target ثم pilot مراقب؛ تحتاج JVM/GUI/عميل على جهاز المالك |
-| S06/S07/S08 | PLANNED | Telegram مضبوط، AI advisory، release/cache/resources |
+| S06 | DONE_LOCAL | Telegram fake-first: RBAC default-deny، redaction/canary، outbox محدود، approval callbacks مقيّدة (T02/T03/T29 الخالصة)؛ 22 اختبارًا (evidence/s06_tests.md) |
+| S07 | NEXT | AI advisory: fake provider، consent/redaction/حدود حجم-عمر-ميزانية-مهلة، مخرجات AIProposal فقط بلا سلطة تنفيذ |
+| S08 | PLANNED | release/cache/resources |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
 كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ اختبارات S01 تغطي أجزاء T20/T05/T26 الخالصة فقط وتُسجَّل عند نجاحها.
