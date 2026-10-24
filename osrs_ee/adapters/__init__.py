@@ -11,6 +11,8 @@ Exports:
 * ``RecordingAdapter`` — wraps any adapter, writes a redacted JSONL trace.
 * ``ReplayAdapter`` — replays a JSONL trace without any client.
 * ``run_conformance`` / ``ConformanceReport`` — contract checks for adapters.
+* ``LoopbackReadOnlyAdapter`` (S04b-prep) — GET-only observe over a loopback
+  endpoint; ``dispatch()`` always returns ``NEVER_DISPATCH`` (NOT_SENT).
 """
 from __future__ import annotations
 
@@ -19,10 +21,12 @@ from osrs_ee.worker import Adapter, AdapterFailure, AdapterResponse, FakeAdapter
 from .recording import RecordingAdapter, TraceWriter
 from .replay import ReplayAdapter, ReplayExhausted, load_trace
 from .conformance import ConformanceReport, run_conformance
+from .loopback_readonly import EndpointError, LoopbackConfig, LoopbackReadOnlyAdapter, NEVER_DISPATCH
 
 __all__ = [
     "Adapter", "AdapterFailure", "AdapterResponse", "FakeAdapter",
     "RecordingAdapter", "TraceWriter",
     "ReplayAdapter", "ReplayExhausted", "load_trace",
     "ConformanceReport", "run_conformance",
+    "EndpointError", "LoopbackConfig", "LoopbackReadOnlyAdapter", "NEVER_DISPATCH",
 ]
