@@ -20,7 +20,7 @@ dev = ["pytest>=8"]
 osrs-ee = "osrs_ee.cli:main"
 
 [tool.setuptools]
-packages = ["osrs_ee"]
+packages = ["osrs_ee", "osrs_ee.adapters", "osrs_ee.transports", "osrs_ee.providers"]
 
 [tool.setuptools.package-data]
 osrs_ee = ["store_schema.sql"]
