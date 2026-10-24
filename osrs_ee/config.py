@@ -73,6 +73,24 @@ class TelegramConfig:
     bot_token_ref: Optional[str] = None
     chat_ids: tuple[int, ...] = ()
     outbox_capacity: int = 32
+    base_url: str = "https://api.telegram.org"
+    allowed_hosts: tuple[str, ...] = ("api.telegram.org",)
+    timeout_seconds: float = 10.0
+    poll_timeout_seconds: int = 0
+    approver_user_ids: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True)
+class AIConfig:
+    """Advisory-only provider (S07). ``enabled=false`` → FakeProvider / no calls."""
+    enabled: bool = False
+    api_key_ref: Optional[str] = None
+    base_url: str = "https://api.openai.com"
+    model: str = "gpt-4o-mini"
+    allowed_hosts: tuple[str, ...] = ("api.openai.com",)
+    timeout_seconds: float = 15.0
+    max_calls: int = 20
+    max_bytes: int = 200_000
 
 
 @dataclass(frozen=True)
@@ -93,6 +111,7 @@ class ServiceConfig:
     resources: ResourceLimits = field(default_factory=ResourceLimits)
     network: NetworkConfig = field(default_factory=NetworkConfig)
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
+    ai: AIConfig = field(default_factory=AIConfig)
     account: AccountConfig = field(default_factory=AccountConfig)
 
     @property
@@ -202,6 +221,31 @@ def _validate(cfg: ServiceConfig) -> None:
         _require(len(tg.chat_ids) >= 1, "telegram.enabled requires at least one chat id")
     elif tg.bot_token_ref is not None:
         _require(isinstance(tg.bot_token_ref, str) and tg.bot_token_ref.startswith("ref:"), "telegram.bot_token_ref must be a ref:...")
+    _require(isinstance(tg.base_url, str) and tg.base_url.startswith(("https://", "http://127.0.0.1", "http://localhost")),
+             "telegram.base_url must be https:// (or a loopback http:// test server)")
+    _require(all(isinstance(h, str) and h for h in tg.allowed_hosts) and len(tg.allowed_hosts) >= 1,
+             "telegram.allowed_hosts must be a non-empty list of host names")
+    _require(isinstance(tg.timeout_seconds, (int, float)) and not isinstance(tg.timeout_seconds, bool)
+             and 1.0 <= float(tg.timeout_seconds) <= 60.0, "telegram.timeout_seconds in [1, 60]")
+    _require(_is_int(tg.poll_timeout_seconds) and 0 <= tg.poll_timeout_seconds <= 50, "telegram.poll_timeout_seconds in [0, 50]")
+    _require(all(_is_int(u) for u in tg.approver_user_ids), "telegram.approver_user_ids must be integers")
+
+    ai = cfg.ai
+    _require(isinstance(ai.enabled, bool), "ai.enabled must be a boolean")
+    if ai.enabled:
+        _require(isinstance(ai.api_key_ref, str) and ai.api_key_ref.startswith("ref:"),
+                 "ai.enabled requires ai.api_key_ref = 'ref:...' (never the key)")
+    elif ai.api_key_ref is not None:
+        _require(isinstance(ai.api_key_ref, str) and ai.api_key_ref.startswith("ref:"), "ai.api_key_ref must be a ref:...")
+    _require(isinstance(ai.base_url, str) and ai.base_url.startswith(("https://", "http://127.0.0.1", "http://localhost")),
+             "ai.base_url must be https:// (or a loopback http:// test server)")
+    _require(isinstance(ai.model, str) and 1 <= len(ai.model) <= 128, "ai.model must be a short non-empty string")
+    _require(all(isinstance(h, str) and h for h in ai.allowed_hosts) and len(ai.allowed_hosts) >= 1,
+             "ai.allowed_hosts must be a non-empty list of host names")
+    _require(isinstance(ai.timeout_seconds, (int, float)) and not isinstance(ai.timeout_seconds, bool)
+             and 0.5 <= float(ai.timeout_seconds) <= 120.0, "ai.timeout_seconds in [0.5, 120]")
+    _require(_is_int(ai.max_calls) and 0 <= ai.max_calls <= 10_000, "ai.max_calls in [0, 10000]")
+    _require(_is_int(ai.max_bytes) and 0 <= ai.max_bytes <= 100_000_000, "ai.max_bytes in [0, 1e8]")
 
     a = cfg.account
     _require(isinstance(a.account_id, str) and a.account_id.startswith("acc_") and len(a.account_id) >= 7,
@@ -219,7 +263,7 @@ def load_config_text(text: str) -> ServiceConfig:
     except tomllib.TOMLDecodeError as e:
         raise ConfigError(f"invalid TOML: {e}") from e
     _scan_secrets(raw)
-    known = {"config_hash", "policy_version", "target", "worker", "health", "resources", "network", "telegram", "account"}
+    known = {"config_hash", "policy_version", "target", "worker", "health", "resources", "network", "telegram", "ai", "account"}
     unknown = sorted(set(raw) - known)
     if unknown:
         raise ConfigError(f"unknown top-level keys {unknown}")
@@ -234,6 +278,7 @@ def load_config_text(text: str) -> ServiceConfig:
         resources=_section(raw, "resources", ResourceLimits),
         network=_section(raw, "network", NetworkConfig),
         telegram=_section(raw, "telegram", TelegramConfig),
+        ai=_section(raw, "ai", AIConfig),
         account=_section(raw, "account", AccountConfig),
     )
     _validate(cfg)

@@ -40,6 +40,21 @@ enabled = false
 # bot_token_ref = "ref:vault:telegram_bot"   # reference only, never the token
 chat_ids = []
 outbox_capacity = 32
+# base_url = "https://api.telegram.org"      # loopback http:// only for fake-server tests
+# allowed_hosts = ["api.telegram.org"]
+# timeout_seconds = 10.0
+# poll_timeout_seconds = 0                   # 0 = short poll; up to 50 for long poll
+# approver_user_ids = []                     # Telegram user ids allowed to approve (owner decides)
+
+[ai]
+enabled = false # ai: advisory only; true requires api_key_ref (ref:env:NAME) — never the key
+# api_key_ref = "ref:env:OSRS_EE_AI_KEY"
+# base_url = "https://api.openai.com"
+# model = "gpt-4o-mini"
+# allowed_hosts = ["api.openai.com"]
+# timeout_seconds = 15.0
+max_calls = 20              # global budget per service run
+max_bytes = 200000
 
 [account]
 account_id = "acc_local001"

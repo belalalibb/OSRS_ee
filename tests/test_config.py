@@ -79,9 +79,18 @@ class ConfigLoading(unittest.TestCase):
             with self.assertRaises(c.ConfigError, msg=new):
                 c.load_config_text(swap(old, new))
         with self.assertRaises(c.ConfigError):
-            c.load_config_text(swap("enabled = false", 'enabled = true'))  # needs token ref + chat ids
-        cfg = c.load_config_text(swap("enabled = false", 'enabled = true\nbot_token_ref = "ref:vault:tg"').replace("chat_ids = []", "chat_ids = [42]"))
+            c.load_config_text(swap("enabled = false\n", 'enabled = true\n'))  # needs token ref + chat ids
+        cfg = c.load_config_text(swap("enabled = false\n", 'enabled = true\nbot_token_ref = "ref:vault:tg"\n').replace("chat_ids = []", "chat_ids = [42]"))
         self.assertEqual(cfg.telegram.chat_ids, (42,))
+        with self.assertRaises(c.ConfigError):
+            c.load_config_text(swap("enabled = false # ai", "enabled = true # ai"))  # needs api_key_ref
+        cfg = c.load_config_text(swap("enabled = false # ai", 'enabled = true\napi_key_ref = "ref:env:OSRS_EE_AI_KEY" # ai'))
+        self.assertTrue(cfg.ai.enabled)
+        for old, new in (("max_calls = 20", "max_calls = -1"), ("max_bytes = 200000", "max_bytes = -5")):
+            with self.assertRaises(c.ConfigError, msg=new):
+                c.load_config_text(swap(old, new))
+        with self.assertRaises(c.ConfigError):
+            c.load_config_text(swap("# base_url = \"https://api.openai.com\"", 'base_url = "http://evil.example.com"'))
 
     def test_invalid_toml_and_missing_file(self):
         with self.assertRaises(c.ConfigError):

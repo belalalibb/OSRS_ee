@@ -148,7 +148,7 @@ class CLIS04cLocal(unittest.TestCase):
             code, _, err = run("service", "--config", sim, "--fast")
             self.assertEqual(code, 2)
             self.assertIn("no unattended runs", err)
-            tg = self._cfg(d, **{"enabled = false": 'enabled = true\nbot_token_ref = "ref:vault:tg"', "chat_ids = []": "chat_ids = [1]"})
+            tg = self._cfg(d, **{"enabled = false\n": 'enabled = true\nbot_token_ref = "ref:vault:tg"\n', "chat_ids = []": "chat_ids = [1]"})
             code, _, err = run("service", "--config", tg, "--max-ticks", "2", "--fast")
             self.assertEqual(code, 2)
             self.assertIn("S06b", err)
