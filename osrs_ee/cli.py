@@ -13,6 +13,9 @@ What this CLI can do today (all offline, no game client, no Telegram, no AI prov
                 recorded trace via --trace); the real S04b adapter will be run through the same suite
   replay      — replay a redacted JSONL adapter trace through the worker on a temp store;
                 exercises worker logic on captured data without any client
+  service     — run the supervised Service loop from a TOML config (S04c-local). Only
+                target.mode="simulated" is accepted: FakeSupervisor + FakeAdapter, bounded by
+                --max-ticks; mode="device" is refused (no real supervisor/adapter exists yet)
 
 What it deliberately does NOT do: launch a JVM/GUI/game client, log into any account,
 talk to Telegram or an AI provider. Those components do not exist yet (see docs/ROADMAP.md,
@@ -51,6 +54,7 @@ def cmd_status(_args: argparse.Namespace) -> int:
             "ai advisor": "REAL logic; provider is FAKE only",
             "release/cache/admission/network policy": "REAL logic; measurements are injected",
             "adapter tooling (recording/replay/conformance/target-check)": "REAL (offline; S04a)",
+            "service loop / config / supervisor boundary": "REAL logic (S04c-local); supervisor is FAKE only (launches nothing)",
             "game client adapter / JVM / GUI supervisor": "NOT IMPLEMENTED (S04b/S04c/S05; needs target machine + ADR-007/008)",
         },
     }
@@ -237,6 +241,65 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_service(args: argparse.Namespace) -> int:
+    """Supervised loop from config. Simulated mode only; device mode is refused honestly."""
+    import time
+    from osrs_ee import service as sv
+    from osrs_ee.config import ConfigError, load_config
+    from osrs_ee.store import Store
+    from osrs_ee.supervisor import FakeSupervisor
+    from osrs_ee.worker import FakeAdapter
+    try:
+        cfg = load_config(args.config)
+    except ConfigError as e:
+        print(f"CONFIG REFUSED: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    if cfg.target.mode != "simulated":
+        print(f"REFUSED: target.mode={cfg.target.mode!r} is not runnable: no real client supervisor/adapter exists "
+              "(S04b not implemented; ADR-007/ADR-008 open). Only mode='simulated' runs.", file=sys.stderr)
+        return EXIT_INVALID
+    if cfg.telegram.enabled:
+        print("REFUSED: telegram.enabled=true but no real transport exists in this build (S06b not implemented).", file=sys.stderr)
+        return EXIT_INVALID
+    max_ticks = args.max_ticks if args.max_ticks is not None else cfg.worker.max_ticks
+    if max_ticks is None:
+        print("REFUSED: simulated service requires a bound: pass --max-ticks or set [worker].max_ticks (no unattended runs).",
+              file=sys.stderr)
+        return EXIT_INVALID
+    Path(cfg.target.data_dir).mkdir(parents=True, exist_ok=True)
+    t0 = _now()
+    store = Store.open(cfg.store_path, now=t0)
+    try:
+        recovered = store.recover(now=t0)
+        state0 = sv.bootstrap_account(store, cfg, t0)
+        obs = {
+            "schema_version": "1.0", "observation_id": "obs_service001", "account_id": cfg.account.account_id,
+            "client_instance_id": "client_service01", "session_epoch": 0, "observed_at": t0.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "state_version": 0, "consistency": "BEST_EFFORT", "fields": {},
+        }
+        tick = timedelta(seconds=cfg.worker.tick_seconds)
+        clock_state = {"now": t0}
+
+        def clock() -> datetime:
+            clock_state["now"] += tick
+            if not args.fast:
+                time.sleep(cfg.worker.tick_seconds)
+            return clock_state["now"]
+
+        svc = sv.Service(store, cfg, FakeAdapter(obs), FakeSupervisor(), None, clock=clock)
+        svc.install_signal_handlers()
+        res = svc.run(max_ticks=max_ticks)
+        print(json.dumps({
+            "mode": "SIMULATED (FakeSupervisor/FakeAdapter; no client, no account, no network)",
+            "config": args.config, "store": str(cfg.store_path), "recovered_accounts": recovered,
+            "state_before": state0, "final_state": res.final_state, "ticks": res.ticks, "restarts": res.restarts,
+            "stop_reason": res.stop_reason, "events": [{"tick": e.tick, "kind": e.kind, "detail": e.detail} for e in res.events],
+        }, indent=2, ensure_ascii=False))
+    finally:
+        store.close()
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="osrs-ee", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -260,6 +323,11 @@ def build_parser() -> argparse.ArgumentParser:
     rp = sub.add_parser("replay", help="replay a redacted adapter trace through the worker (temp store)")
     rp.add_argument("trace")
     rp.set_defaults(fn=cmd_replay)
+    se = sub.add_parser("service", help="supervised loop from TOML config; simulated mode only (S04c-local)")
+    se.add_argument("--config", required=True, help="path to config.toml (see config.example.toml)")
+    se.add_argument("--max-ticks", type=int, help="bound the run (required unless [worker].max_ticks is set)")
+    se.add_argument("--fast", action="store_true", help="do not sleep between ticks (tests/demos)")
+    se.set_defaults(fn=cmd_service)
     return p
 
 

@@ -55,7 +55,7 @@ class CLI(unittest.TestCase):
     def test_no_run_bot_subcommand_exists(self):
         parser = cli.build_parser()
         names = set(parser._subparsers._group_actions[0].choices)  # type: ignore[attr-defined]
-        self.assertEqual(names, {"status", "validate", "store", "demo", "target-check", "conformance", "replay"})
+        self.assertEqual(names, {"status", "validate", "store", "demo", "target-check", "conformance", "replay", "service"})
         self.assertFalse(names & {"run", "run-bot", "start", "play", "login"})
 
 
@@ -110,3 +110,49 @@ class CLIS04a(unittest.TestCase):
             code, _, err = run("replay", str(bad))
             self.assertEqual(code, 1)
             self.assertIn("not marked redacted", err)
+
+
+class CLIS04cLocal(unittest.TestCase):
+    def _cfg(self, d: str, **swap) -> str:
+        text = (Path(__file__).resolve().parent.parent / "config.example.toml").read_text()
+        text = text.replace('data_dir = "data"', f'data_dir = "{d}/data"')
+        for old, new in swap.items():
+            assert old in text, old
+            text = text.replace(old, new)
+        p = Path(d) / "c.toml"
+        p.write_text(text)
+        return str(p)
+
+    def test_service_simulated_runs_bounded_and_persists_resting(self):
+        with tempfile.TemporaryDirectory() as d:
+            cfg = self._cfg(d)
+            code, out, _ = run("service", "--config", cfg, "--max-ticks", "3", "--fast")
+            rep = json.loads(out)
+            self.assertEqual(code, 0)
+            self.assertIn("SIMULATED", rep["mode"])
+            self.assertEqual((rep["state_before"], rep["final_state"], rep["ticks"]), ("READY", "RESTING", 3))
+            self.assertEqual(rep["stop_reason"], "max_ticks")
+            # second run resumes from the persisted store: RESTING -> READY (bootstrap) -> new epoch -> RESTING
+            code, out, _ = run("service", "--config", cfg, "--max-ticks", "2", "--fast")
+            rep = json.loads(out)
+            self.assertEqual((code, rep["state_before"], rep["final_state"]), (0, "READY", "RESTING"))
+            self.assertIn("epoch 2", rep["events"][0]["detail"])
+
+    def test_service_refuses_device_mode_unbounded_and_telegram(self):
+        with tempfile.TemporaryDirectory() as d:
+            dev = self._cfg(d, **{'mode = "simulated"': 'mode = "device"\nclient_path = "/opt/x.jar"'})
+            code, _, err = run("service", "--config", dev, "--max-ticks", "2", "--fast")
+            self.assertEqual(code, 2)
+            self.assertIn("not runnable", err)
+            sim = self._cfg(d)
+            code, _, err = run("service", "--config", sim, "--fast")
+            self.assertEqual(code, 2)
+            self.assertIn("no unattended runs", err)
+            tg = self._cfg(d, **{"enabled = false": 'enabled = true\nbot_token_ref = "ref:vault:tg"', "chat_ids = []": "chat_ids = [1]"})
+            code, _, err = run("service", "--config", tg, "--max-ticks", "2", "--fast")
+            self.assertEqual(code, 2)
+            self.assertIn("S06b", err)
+            bad = Path(d) / "bad.toml"; bad.write_text('config_hash = "zz"')
+            code, _, err = run("service", "--config", str(bad), "--max-ticks", "1", "--fast")
+            self.assertEqual(code, 2)
+            self.assertIn("CONFIG REFUSED", err)
