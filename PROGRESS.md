@@ -10,8 +10,8 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/SJ2A2ZQ6 (bundle docs1، SHA-256 `8c7cd65322494db43b0de5720eb6635df87e63ae9e6ccd43295db50b684379ee`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
-| commit | `e42f52e` على `genspark_ai_developer` (282 passed, 8 skipped؛ remote GitHub ما زال عند `6552b84`؛ التفويض لا يُطلب أثناء التطوير بقرار المالك) |
+| الرابط | https://www.genspark.ai/api/files/s/U0swtUwT (bundle docs2، SHA-256 `5d0fd320824210925bda21f18c914c3a4c059d779b55a3611a851317fd8abb1d`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
+| commit | `ad1bfe4` على `genspark_ai_developer` (282 passed, 8 skipped؛ remote GitHub ما زال عند `6552b84`؛ التفويض لا يُطلب أثناء التطوير بقرار المالك) |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
