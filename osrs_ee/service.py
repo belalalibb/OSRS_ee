@@ -84,8 +84,13 @@ class Service:
     def __init__(self, store: Store, cfg: ServiceConfig, adapter: Adapter, supervisor: Supervisor,
                  outbox: Optional[Outbox] = None, *, clock: Callable[[], datetime], intents: Iterable[dict] = (),
                  session_id: str = "sess_service", client_instance_id: str = "client_service01",
-                 lease_ttl_seconds: int = 3600, alert_chat_id: int = 0) -> None:
+                 lease_ttl_seconds: int = 3600, alert_chat_id: int = 0,
+                 host_measure: Optional[Callable[[datetime], Optional[dict]]] = None) -> None:
         self.store, self.cfg, self.adapter, self.sup, self.outbox = store, cfg, adapter, supervisor, outbox
+        # Pre-start admission measures the *host* (disk reserve, service RSS/FDs): the client
+        # does not exist yet. Running sessions measure the supervised child. None = use the
+        # supervisor for both (FakeSupervisor answers before start; a real one cannot).
+        self.host_measure = host_measure
         self.clock = clock
         self.session_id, self.client_instance_id = session_id, client_instance_id
         self.lease_ttl_seconds, self.alert_chat_id = lease_ttl_seconds, alert_chat_id
@@ -125,8 +130,8 @@ class Service:
                 return
             self.outbox.enqueue(OutboundMessage(self.alert_chat_id, text, "ALERT", dedupe_key=f"{kind}:{self.ticks}"))
 
-    def _snapshot(self, now: datetime) -> Optional[ResourceSnapshot]:
-        m = self.sup.measure(now)
+    def _snapshot(self, now: datetime, *, pre_start: bool = False) -> Optional[ResourceSnapshot]:
+        m = self.host_measure(now) if (pre_start and self.host_measure is not None) else self.sup.measure(now)
         if m is None:
             return None
         return ResourceSnapshot(m["rss_bytes"], m["disk_free_bytes"], m["open_fds"], m["cpu_percent"], now)
@@ -137,7 +142,7 @@ class Service:
         if acc.state != "READY":
             self._emit("start.refused", f"state {acc.state} is not READY")
             return False
-        snap = self._snapshot(now)
+        snap = self._snapshot(now, pre_start=True)
         if snap is None:
             self._emit("start.refused", "no resource measurement")
             return False

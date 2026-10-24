@@ -120,3 +120,14 @@ def measure_dict(pid: int, data_dir: str, now: datetime, *, cpu: Optional[CpuSam
         return None
     return {"rss_bytes": snap.rss_bytes, "disk_free_bytes": snap.disk_free_bytes,
             "open_fds": snap.open_fds, "cpu_percent": snap.cpu_percent}
+
+
+def host_measurer(data_dir: str, now: datetime, *, pid: Optional[int] = None):
+    """Callable ``now -> measure_dict`` for the *service host* (pre-start admission).
+
+    Takes the first CPU sample immediately so the first real call can already
+    yield a snapshot (still None if anything is unmeasurable)."""
+    target = os.getpid() if pid is None else pid
+    sampler = CpuSampler(target)
+    sampler.sample(now)
+    return lambda at: measure_dict(target, data_dir, at, cpu=sampler)
