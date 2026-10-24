@@ -4,7 +4,7 @@
 
 | الوضع | ما هو | هل يعمل الآن؟ |
 |---|---|---|
-| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + config/service + CLI | **نعم** — 203 اختبارات offline، تثبيت موثق أدناه |
+| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + config/service + CLI + نقل Telegram/مزوّد AI (كود) | **نعم** — 226 اختبارًا offline (23 منها ضد خادم loopback وهمي)، تثبيت موثق أدناه |
 | **B. المحاكاة المتكاملة** | نفس النواة مع محوّلات وهمية (FakeAdapter/FakeTransport/FakeProvider) في حلقة واحدة | **نعم** — `osrs-ee demo`؛ يثبت التوصيل لا سلوك اللعبة |
 | **C. النظام المتكامل** | JVM + GUI + عميل اللعبة + Telegram حقيقي + مزوّد AI حقيقي | **لا** — المكونات غير موجودة (انظر §3 وdocs/ROADMAP.md) |
 
@@ -35,7 +35,7 @@ Windows (PowerShell): `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; pip in
 
 ### التحقق من التثبيت
 ```bash
-python -m pytest                              # المتوقع: 203 passed (pyproject يضبط testpaths=tests)
+python -m pytest                              # المتوقع: 226 passed (pyproject يضبط testpaths=tests)
 osrs-ee status                                # JSON: إصدارات + حالة كل مكوّن (REAL / FAKE only / NOT IMPLEMENTED)
 ```
 إذا ظهر `ModuleNotFoundError: jsonschema` فالبيئة الافتراضية غير مفعّلة. إذا فشل اختبار بسبب الشبكة فهذا متعمد: `tests/conftest.py` يحجب أي socket.
@@ -102,8 +102,8 @@ from osrs_ee import worker, guards, contracts
 | Guards (سياق/طزاجة/نتيجة/AI) | **REAL** | `osrs_ee/guards.py` | خالص، ساعة محقونة |
 | Store SQLite (آلة حالات، leases، journal، approvals، recovery) | **REAL** | `osrs_ee/store.py`, `store_schema.sql` | ملف محلي؛ متانة فقدان الطاقة على OS الهدف غير مُثبتة (ADR-007) |
 | Worker/scheduler/abort/health | **REAL logic** | `osrs_ee/worker.py` | **المحوّل FAKE فقط** (`FakeAdapter`) |
-| Telegram RBAC/redaction/outbox/approvals | **REAL logic** | `osrs_ee/telegram.py` | **النقل FAKE فقط** (`FakeTransport`)؛ لا bot token |
-| AI advisory gates | **REAL logic** | `osrs_ee/advisor.py` | **المزوّد FAKE فقط** (`FakeProvider`) |
+| Telegram RBAC/redaction/outbox/approvals | **REAL logic** | `osrs_ee/telegram.py` | نقل حقيقي موجود في `osrs_ee/transports/` (urllib؛ token عبر `ref:env:` فقط) **مختبر ضد خادم وهمي محلي فقط**؛ غير مربوط بالخدمة بعد |
+| AI advisory gates | **REAL logic** | `osrs_ee/advisor.py` | مزوّد حقيقي في `osrs_ee/providers/openai_compat.py` (urllib؛ مفتاح عبر `ref:env:`) **مختبر ضد خادم وهمي محلي فقط**؛ لم يُتصل بأي API فعلي |
 | Registry/Release/Cache/Admission/NetworkPolicy | **REAL logic** | `osrs_ee/release.py` | القياسات محقونة؛ canary حي غير مُنمذج |
 | Config TOML + Service loop + Supervisor boundary | **REAL logic** | `osrs_ee/config.py`, `service.py`, `supervisor.py` | **المشرف FAKE فقط** (`FakeSupervisor` لا يطلق أي عملية)؛ وضع `device` مرفوض |
 | CLI | **REAL** | `osrs_ee/cli.py` | يعرض فقط ما هو موجود |

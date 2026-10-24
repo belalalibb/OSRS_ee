@@ -29,12 +29,13 @@
 | PUSH-02 | BLOCKED_AUTH | دفع `7a63ebc`/`dc51bea`/تصحيح الوثائق إلى `genspark_ai_developer` وتحديث وصف PR #1؛ يتم تلقائيًا عند أول جلسة بتفويض ناجح (fetch → تأكيد `6552b84` سلف → push عادي → تحقق SHA) |
 | S04a | DONE_LOCAL | `osrs_ee/adapters/` (RecordingAdapter بتنقيح fail-closed، ReplayAdapter صارم، conformance C1–C7) + `target_check` (لا يشغّل شيئًا) + CLI target-check/conformance/replay؛ 20 اختبارًا؛ المجموع 181 (evidence/s04a_tests.md) |
 | S04c-local | DONE_LOCAL | `config.py` (TOML fail-closed، مراجع فقط، auth_mode مقفول) + `supervisor.py` (Protocol + FakeSupervisor) + `service.py` (قبول→بدء→إيقاف منظم؛ UNKNOWN/لا exit proof→RECOVERY_REQUIRED؛ إعادة تشغيل محدودة→CIRCUIT_OPEN؛ ضغط→إيقاف؛ تنبيهات منقّحة) + CLI `service` (simulated فقط) + `config.example.toml`؛ 22 اختبارًا؛ المجموع 203 (evidence/s04c_local_tests.md)؛ المشرف الحقيقي يبقى على الجهاز |
-| S06b-local | NEXT (لا يحتاج هدفًا) | نقل Telegram HTTP بـurllib (stdlib) + poll، مختبر ضد خادم HTTP وهمي محلي؛ لا إنترنت، لا token حقيقي |
-| S07b-local | NEXT (بعد S06b) | مزوّد `openai_compat` بـurllib ضد خادم وهمي محلي؛ استشاري فقط |
+| S06b-local | DONE_LOCAL | `osrs_ee/transports/` TelegramHttpTransport (urllib، `ref:env:` → canary، allowlist، 429/5xx/4xx) + TelegramPoller/parse_update صارم؛ `tests/fake_http.py`؛ 14 اختبارًا؛ المجموع 217 (evidence/s06b_local_tests.md)؛ الربط بالخدمة وT02/T03 على دردشة حقيقية يحتاجان مفتاح اختبار من المالك |
+| S07b-local | DONE_LOCAL | `osrs_ee/providers/openai_compat.py` (urllib، `ref:env:` → canary، allowlist، مهلة مقيدة بالـdeadline، حد حجم)؛ 9 اختبارات مع تكامل Advisor؛ المجموع 226 (evidence/s07b_local_tests.md)؛ لم يُتصل بأي مزوّد حقيقي |
+| WIRE-01 | GATED_OWNER | ربط النقل/المزوّد الحقيقيين بـ`service`/CLI يحتاج: مفتاح اختبار Telegram ودردشة اختبار، قرار تفعيل AI، وإذنًا صريحًا؛ حتى ذلك `service` يرفض `telegram.enabled=true` |
 | S04b/S04c/S05 | GATED_OWNER + OUT_OF_SANDBOX | adapter للقراءة فقط على الجهاز، مشرف/خدمة/إعداد، pilot مراقب؛ تحتاج ADR-007/008 وجهاز هدف وإذنًا صريحًا؛ ROADMAP |
 | S06b/S07b/S08b | PLANNED | نقل Telegram حقيقي، مزوّد AI حقيقي، قياسات فعلية — بعد S04b وبإذن؛ ROADMAP |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
-كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (203) تغطي منطق القرار الخالص فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
+كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (226) تغطي منطق القرار الخالص فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
 
 عند «تابع»: الاستئناف من GitHub (`git clone` + checkout `genspark_ai_developer`) إن كان التفويض متاحًا، وإلا من آخر حزمة في PROGRESS (RESUME_PROTOCOL §1). كل عمل جديد: commit → push للفرع (أو bundle عند فقد التفويض) → تحديث PR #1 أو فتح PR جديد.
