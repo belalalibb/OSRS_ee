@@ -7,6 +7,13 @@ socket class but refuses any connect() to a non-loopback address.
 import contextlib
 import socket
 
+# Import every stdlib module that subclasses socket.socket at import time BEFORE the
+# patch below: otherwise a later `import ssl` (via http.client/urllib) fails with
+# "function() argument 'code' must be code, not str" (found in a clean venv run).
+import ssl  # noqa: E402,F401
+import http.client  # noqa: E402,F401
+import urllib.request  # noqa: E402,F401
+
 _REAL_SOCKET = socket.socket
 _REAL_CREATE_CONNECTION = socket.create_connection
 
