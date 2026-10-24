@@ -4,7 +4,7 @@
 
 | الوضع | ما هو | هل يعمل الآن؟ |
 |---|---|---|
-| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + CLI | **نعم** — 181 اختبارًا offline، تثبيت موثق أدناه |
+| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + config/service + CLI | **نعم** — 203 اختبارات offline، تثبيت موثق أدناه |
 | **B. المحاكاة المتكاملة** | نفس النواة مع محوّلات وهمية (FakeAdapter/FakeTransport/FakeProvider) في حلقة واحدة | **نعم** — `osrs-ee demo`؛ يثبت التوصيل لا سلوك اللعبة |
 | **C. النظام المتكامل** | JVM + GUI + عميل اللعبة + Telegram حقيقي + مزوّد AI حقيقي | **لا** — المكونات غير موجودة (انظر §3 وdocs/ROADMAP.md) |
 
@@ -35,12 +35,12 @@ Windows (PowerShell): `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; pip in
 
 ### التحقق من التثبيت
 ```bash
-python -m pytest                              # المتوقع: 181 passed (pyproject يضبط testpaths=tests)
+python -m pytest                              # المتوقع: 203 passed (pyproject يضبط testpaths=tests)
 osrs-ee status                                # JSON: إصدارات + حالة كل مكوّن (REAL / FAKE only / NOT IMPLEMENTED)
 ```
 إذا ظهر `ModuleNotFoundError: jsonschema` فالبيئة الافتراضية غير مفعّلة. إذا فشل اختبار بسبب الشبكة فهذا متعمد: `tests/conftest.py` يحجب أي socket.
 
-**تم التحقق فعليًا** (2026-10-23): venv جديد → `pip install -e ".[dev]"` → `osrs-ee status` يعمل → 161 اختبارًا تمر (181 بعد S04a) من خارج مجلد المستودع.
+**تم التحقق فعليًا** (2026-10-23): venv جديد → `pip install -e ".[dev]"` → `osrs-ee status` يعمل → 161 اختبارًا تمر (181 بعد S04a؛ 203 بعد S04c-local) من خارج مجلد المستودع.
 
 ---
 
@@ -76,7 +76,16 @@ osrs-ee replay trace.jsonl               # إعادة تشغيل أثر JSONL م
 ```
 الأثر يُنتَج بلفّ أي adapter بـ`RecordingAdapter(TraceWriter(path, Redactor(aliases=...)))`؛ التنقيح إلزامي (معرّفات الحسابات → pseudonym، أي canary/سر → السجل لا يُكتب). الـadapter الحقيقي في S04b يجب أن يجتاز `run_conformance` نفسها قبل أي استخدام.
 
-### 2.5 الاستخدام كمكتبة
+### 2.5 حلقة الخدمة المحاكاة (S04c-local؛ بلا عميل)
+```bash
+cp config.example.toml config.toml            # عدّل data_dir إن أردت؛ لا تضع أي سر — مراجع ref: فقط
+osrs-ee service --config config.toml --max-ticks 20          # ينام tick_seconds بين الدورات
+osrs-ee service --config config.toml --max-ticks 20 --fast   # بلا نوم (عروض/اختبارات)
+osrs-ee store show data/store.sqlite
+```
+يحمّل الإعدادات **fail-closed** (مفتاح مجهول/سر حرفي/حد خاطئ → `CONFIG REFUSED` exit 2)، يفتح/يستعيد المخزن، يُهيئ الحساب إلى READY، ثم يدير جلسة واحدة بـ`FakeSupervisor` + `FakeAdapter`: قبول بالموارد → بدء → خطوات → إيقاف منظم (`abort → drain → stop`) → RESTING. يُثبّت الحالة في SQLite ويستأنف منها في التشغيل التالي (RESTING → READY → epoch جديد). الخرج يحمل `"mode": "SIMULATED ..."` دائمًا. **يرفض**: `target.mode="device"` (لا مشرف حقيقي؛ S04b)، `telegram.enabled=true` (S06b)، والتشغيل بلا حد (`--max-ticks` أو `[worker].max_ticks`). Ctrl-C/SIGTERM → `request_stop` → إيقاف منظم في الدورة التالية.
+
+### 2.6 الاستخدام كمكتبة
 ```python
 from osrs_ee.store import Store
 from osrs_ee import worker, guards, contracts
@@ -96,6 +105,7 @@ from osrs_ee import worker, guards, contracts
 | Telegram RBAC/redaction/outbox/approvals | **REAL logic** | `osrs_ee/telegram.py` | **النقل FAKE فقط** (`FakeTransport`)؛ لا bot token |
 | AI advisory gates | **REAL logic** | `osrs_ee/advisor.py` | **المزوّد FAKE فقط** (`FakeProvider`) |
 | Registry/Release/Cache/Admission/NetworkPolicy | **REAL logic** | `osrs_ee/release.py` | القياسات محقونة؛ canary حي غير مُنمذج |
+| Config TOML + Service loop + Supervisor boundary | **REAL logic** | `osrs_ee/config.py`, `service.py`, `supervisor.py` | **المشرف FAKE فقط** (`FakeSupervisor` لا يطلق أي عملية)؛ وضع `device` مرفوض |
 | CLI | **REAL** | `osrs_ee/cli.py` | يعرض فقط ما هو موجود |
 | **Game client adapter** (تنفيذ `Adapter` حقيقي) | **MISSING** | — | S04؛ يحتاج ADR-007/008 + جهاز |
 | **JVM/GUI process supervisor** (owned processes, readiness, health signals فعلية) | **MISSING** | — | S04 |
