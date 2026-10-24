@@ -28,3 +28,7 @@ osrs_ee = ["store_schema.sql"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    "target: needs the owner's target machine (real client/JVM/GUI); SKIPPED unless OSRS_EE_TARGET=1 — never a paper pass",
+    "live: needs a real external service + owner key via ref:env; SKIPPED unless OSRS_EE_ALLOW_NETWORK=1 and the env var exists",
+]
