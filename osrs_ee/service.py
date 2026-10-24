@@ -79,7 +79,7 @@ class Service:
 
     def __init__(self, store: Store, cfg: ServiceConfig, adapter: Adapter, supervisor: Supervisor,
                  outbox: Optional[Outbox] = None, *, clock: Callable[[], datetime], intents: Iterable[dict] = (),
-                 session_id: str = "sess_service01", client_instance_id: str = "client_service01",
+                 session_id: str = "sess_service", client_instance_id: str = "client_service01",
                  lease_ttl_seconds: int = 3600, alert_chat_id: int = 0) -> None:
         self.store, self.cfg, self.adapter, self.sup, self.outbox = store, cfg, adapter, supervisor, outbox
         self.clock = clock
@@ -140,7 +140,8 @@ class Service:
             self._emit("start.denied", f"{decision.reason_code}: {decision.detail}", alert=True)
             return False
         epoch = acc.session_epoch + 1
-        self.store.acquire_lease(self.account_id, lease_id=f"lease_service{epoch:03d}", session_id=self.session_id,
+        # lease_id and session_id are unique per epoch (leases.session_id is UNIQUE in the Store).
+        self.store.acquire_lease(self.account_id, lease_id=f"lease_service{epoch:03d}", session_id=f"{self.session_id}_{epoch:03d}",
                                  client_instance_id=self.client_instance_id, expected_version=acc.state_version,
                                  ttl_seconds=self.lease_ttl_seconds, now=now)
         self.sup.start(now)
