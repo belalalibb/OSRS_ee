@@ -4,6 +4,9 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-24 03:10 | `2763c2e` (genspark_ai_developer) | `4eb18b6e6be50c0d35bb3d89f68171d9e0a3245f7d645725c499dea3712f2b35` | https://www.genspark.ai/api/files/s/CEoF4h7m | s07b1: providers/openai_compat + test_provider_http (9)؛ 226 اختبارًا؛ بعد المسح 23 (استُعيدت s06b1) |
+| 2026-10-24 02:45 | `b903e72` (genspark_ai_developer) | `8e2907f0f2b3b55a2a969daf7d9a74c3664fa732025835c7bb701994c2901fda` | https://www.genspark.ai/api/files/s/SZlAHu9U | s06b1: transports telegram_http/poll + fake_http + conftest loopback_only؛ 217 اختبارًا؛ استُعيدت بنجاح بعد المسح 23 |
+| 2026-10-24 02:20 | `220e941` (genspark_ai_developer) | `ed641c81d711cfd5390bdc0a4ef65442aebfa785593144dec3508fc25aaccbad` | https://www.genspark.ai/api/files/s/r7GrfpHn | s04c3: وثائق S04c-local DONE_LOCAL؛ 203 اختبارات |
 | 2026-10-24 02:05 | `8c4216f` (genspark_ai_developer) | `3448bafc2c206672a7ce8607f6a125fd1efb79471984d9d654f0fd5d343f9655` | https://www.genspark.ai/api/files/s/aniirlRx | s04c2: CLI service + اختبارات CLI (+2) + evidence/s04c_local_tests.md؛ 203 اختبارات؛ بعد المسح 22 (استُعيدت s04c1) |
 | 2026-10-24 01:35 | `4fdb0b9` (genspark_ai_developer) | `be46c5a3699c4838d2503c470887f7884a902beb5b42541a2188331268dc800d` | https://www.genspark.ai/api/files/s/MTxbiSH7 | s04c1: config/supervisor/service + test_config (7) + test_service (13)؛ 201 اختبارًا؛ بعد المسح 21 (استُعيدت s04a3)؛ استُعيدت بنجاح بعد المسح 22 |
 | 2026-10-24 00:55 | `b877d06` (genspark_ai_developer) | `f341e94ecc96bd79addcc7e9b9e1f263863d33432fa1d60e275d703a9ee322be` | https://www.genspark.ai/api/files/s/B0uEkjA2 | s04a3: وثائق S04a DONE_LOCAL؛ 181 اختبارًا؛ استُعيدت بنجاح بعد المسح 21 |
