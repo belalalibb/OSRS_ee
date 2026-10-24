@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -55,7 +56,8 @@ class CLI(unittest.TestCase):
     def test_no_run_bot_subcommand_exists(self):
         parser = cli.build_parser()
         names = set(parser._subparsers._group_actions[0].choices)  # type: ignore[attr-defined]
-        self.assertEqual(names, {"status", "validate", "store", "demo", "target-check", "conformance", "replay", "service"})
+        self.assertEqual(names, {"status", "validate", "store", "demo", "target-check", "conformance", "replay", "service",
+                                 "config-check", "doctor"})
         self.assertFalse(names & {"run", "run-bot", "start", "play", "login"})
 
 
@@ -151,8 +153,77 @@ class CLIS04cLocal(unittest.TestCase):
             tg = self._cfg(d, **{"enabled = false\n": 'enabled = true\nbot_token_ref = "ref:vault:tg"\n', "chat_ids = []": "chat_ids = [1]"})
             code, _, err = run("service", "--config", tg, "--max-ticks", "2", "--fast")
             self.assertEqual(code, 2)
-            self.assertIn("S06b", err)
+            self.assertIn("allow-real-network", err)  # telegram REAL needs explicit opt-in; nothing built
             bad = Path(d) / "bad.toml"; bad.write_text('config_hash = "zz"')
             code, _, err = run("service", "--config", str(bad), "--max-ticks", "1", "--fast")
             self.assertEqual(code, 2)
             self.assertIn("CONFIG REFUSED", err)
+
+
+class CLIWire01(unittest.TestCase):
+    def _cfg(self, d: str, **swap) -> str:
+        text = (Path(__file__).resolve().parent.parent / "config.example.toml").read_text()
+        text = text.replace('data_dir = "data"', f'data_dir = "{d}/data"')
+        for old, new in swap.items():
+            assert old in text, old
+            text = text.replace(old, new)
+        p = Path(d) / "c.toml"
+        p.write_text(text)
+        return str(p)
+
+    def test_config_check_reports_simulated_and_fake_components(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out, _ = run("config-check", "--config", self._cfg(d))
+            self.assertEqual(code, 0)
+            doc = json.loads(out)
+            self.assertEqual(doc["summary"]["mode"], "SIMULATED")
+            modes = {c["component"]: c["mode"] for c in doc["components"]}
+            self.assertEqual(modes["telegram.transport"], "FAKE")
+            self.assertEqual(modes["ai.provider"], "FAKE")
+            self.assertTrue(doc["runnable_by_service"])
+            self.assertFalse(doc["secrets"]["telegram.bot_token_ref"]["present"])
+
+    def test_config_check_refuses_real_without_opt_in_and_never_prints_secret_values(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.environ["OSRS_EE_TEST_TG"] = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"
+            try:
+                cfgp = self._cfg(d, **{"enabled = false\n": 'enabled = true\nbot_token_ref = "ref:env:OSRS_EE_TEST_TG"\n',
+                                      "chat_ids = []": "chat_ids = [1]",
+                                      "egress_allowlist = []": 'egress_allowlist = ["api.telegram.org:443:telegram"]'})
+                code, out, _ = run("config-check", "--config", cfgp)
+                self.assertEqual(code, 2)
+                doc = json.loads(out)
+                self.assertIn("allow-real-network", doc["wiring_refusal"])
+                self.assertTrue(doc["secrets"]["telegram.bot_token_ref"]["present"])
+                self.assertNotIn("FAKE_TOKEN", out)
+            finally:
+                del os.environ["OSRS_EE_TEST_TG"]
+
+    def test_config_check_rejects_invalid_config(self):
+        with tempfile.TemporaryDirectory() as d:
+            bad = Path(d) / "bad.toml"; bad.write_text('config_hash = "zz"')
+            code, _, err = run("config-check", "--config", str(bad))
+            self.assertEqual(code, 2)
+            self.assertIn("CONFIG REFUSED", err)
+
+    def test_doctor_states_simulated_components_and_local_readiness(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out, _ = run("doctor", "--config", self._cfg(d, **{"disk_reserve_bytes = 1073741824": "disk_reserve_bytes = 0"}))
+            doc = json.loads(out)
+            names = {c["check"]: c for c in doc["checks"]}
+            self.assertIn("SIMULATED", names["supervisor"]["kind"])
+            self.assertIn("SIMULATED", names["adapter"]["kind"])
+            self.assertEqual(names["java on PATH"]["kind"], "TARGET_ONLY")
+            self.assertTrue(names["data_dir writable"]["ok"])
+            self.assertEqual(names["secret ai.api_key_ref"]["kind"], "PRESENCE_ONLY")
+            self.assertIn("not a target", doc["host"])
+            self.assertEqual(code, 0 if doc["ready_local"] else 2)
+
+    def test_service_simulated_run_reports_fake_components(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out, _ = run("service", "--config", self._cfg(d), "--max-ticks", "3", "--fast")
+            self.assertEqual(code, 0)
+            doc = json.loads(out)
+            self.assertTrue(doc["mode"].startswith("SIMULATED"))
+            self.assertEqual({c["component"]: c["mode"] for c in doc["components"]}["telegram.transport"], "FAKE")
+            self.assertEqual(doc["egress_denied"], [])

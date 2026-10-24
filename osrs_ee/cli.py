@@ -17,9 +17,16 @@ What this CLI can do today (all offline, no game client, no Telegram, no AI prov
                 target.mode="simulated" is accepted: FakeSupervisor + FakeAdapter, bounded by
                 --max-ticks; mode="device" is refused (no real supervisor/adapter exists yet)
 
-What it deliberately does NOT do: launch a JVM/GUI/game client, log into any account,
-talk to Telegram or an AI provider. Those components do not exist yet (see docs/ROADMAP.md,
-docs/RUNBOOK.md §3). Any such subcommand would be a fake; none is provided.
+  config-check — load + validate a TOML config and print a redacted summary with the
+                mode per component (SIMULATED / REAL / FAKE / DISABLED); exit 2 on refusal
+  doctor      — component readiness: python/sqlite/jsonschema, /proc measurement, store
+                path writable, which ref:env secrets are PRESENT (as booleans only), java,
+                display; states what is SIMULATED vs real; launches nothing
+
+What it deliberately does NOT do: launch a JVM/GUI/game client, log into any account.
+Telegram/AI REAL components exist (S06b/S07b) but the `service` command builds them only
+through osrs_ee.wiring with explicit opt-in (--allow-real-network + OSRS_EE_ALLOW_NETWORK=1
++ egress allowlist); by default everything network-facing is FAKE.
 """
 from __future__ import annotations
 
@@ -241,6 +248,128 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _redacted_config_summary(cfg) -> dict:
+    """Summary safe to print: refs are shown as refs; no values of env vars ever appear."""
+    return {
+        "mode": "SIMULATED" if cfg.target.mode == "simulated" else cfg.target.mode.upper(),
+        "config_hash": cfg.config_hash[:12] + "…", "policy_version": cfg.policy_version,
+        "target": {"mode": cfg.target.mode, "client_path": cfg.target.client_path, "data_dir": cfg.target.data_dir,
+                   "display_required": cfg.target.display_required},
+        "worker": {"observation_max_age_seconds": cfg.worker.observation_max_age_seconds,
+                   "dispatch_timeout_seconds": cfg.worker.dispatch_timeout_seconds, "max_queue": cfg.worker.max_queue,
+                   "tick_seconds": cfg.worker.tick_seconds, "max_ticks": cfg.worker.max_ticks},
+        "health": {"freeze_after_seconds": cfg.health.freeze_after_seconds, "restart_budget": cfg.health.restart_budget,
+                   "restart_window_seconds": cfg.health.restart_window_seconds, "ready_timeout_seconds": cfg.health.ready_timeout_seconds},
+        "resources": {"rss_limit_bytes": cfg.resources.rss_limit_bytes, "disk_reserve_bytes": cfg.resources.disk_reserve_bytes,
+                      "fd_limit": cfg.resources.fd_limit, "cpu_limit_percent": cfg.resources.cpu_limit_percent},
+        "network": {"required_route": cfg.network.required_route, "egress_allowlist": list(cfg.network.egress_allowlist)},
+        "telegram": {"enabled": cfg.telegram.enabled, "bot_token_ref": cfg.telegram.bot_token_ref, "base_url": cfg.telegram.base_url,
+                     "chat_ids": len(cfg.telegram.chat_ids), "approver_user_ids": len(cfg.telegram.approver_user_ids)},
+        "ai": {"enabled": cfg.ai.enabled, "api_key_ref": cfg.ai.api_key_ref, "base_url": cfg.ai.base_url, "model": cfg.ai.model,
+               "max_calls": cfg.ai.max_calls, "max_bytes": cfg.ai.max_bytes},
+        "account": {"account_id": cfg.account.account_id, "alias": cfg.account.alias, "credential_ref": cfg.account.credential_ref,
+                    "auth_mode": cfg.account.auth_mode},
+    }
+
+
+def _env_ref_present(ref, env) -> dict:
+    """Never prints the value: only whether the referenced env var is set and non-empty."""
+    if not ref:
+        return {"ref": None, "present": False, "note": "no reference configured"}
+    if not str(ref).startswith("ref:env:"):
+        return {"ref": ref, "present": None, "note": "not an env ref; cannot be resolved by this build (ref:env:NAME only)"}
+    name = str(ref)[len("ref:env:"):]
+    return {"ref": ref, "present": bool(env.get(name))}
+
+
+def cmd_config_check(args: argparse.Namespace) -> int:
+    """Load, validate and summarise a config; build components in dry-run and report their modes."""
+    import os
+    from osrs_ee import wiring
+    from osrs_ee.config import ConfigError, load_config
+    try:
+        cfg = load_config(args.config)
+    except ConfigError as e:
+        print(f"CONFIG REFUSED: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    out = {"config": args.config, "status": "VALID", "summary": _redacted_config_summary(cfg),
+           "secrets": {"telegram.bot_token_ref": _env_ref_present(cfg.telegram.bot_token_ref, os.environ),
+                       "ai.api_key_ref": _env_ref_present(cfg.ai.api_key_ref, os.environ)},
+           "components": None, "wiring_refusal": None,
+           "runnable_by_service": cfg.target.mode == "simulated",
+           "note": ("SIMULATED: supervisor/adapter are fakes; nothing is launched" if cfg.target.mode == "simulated"
+                    else "mode=device is NOT runnable in this build (ADR-007/ADR-008 open)")}
+    try:
+        wd = wiring.build(cfg, allow_real_network=args.allow_real_network)
+        out["components"] = wd.report()
+    except wiring.WiringError as e:
+        out["wiring_refusal"] = str(e)
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+    return EXIT_OK if out["wiring_refusal"] is None else EXIT_INVALID
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    """Component readiness. Everything measured here is about THIS machine, not a target."""
+    import os
+    import shutil
+    import sqlite3
+    from osrs_ee import measure
+    from osrs_ee.config import ConfigError, load_config
+    checks: list[dict] = []
+
+    def add(name, ok, detail, kind="REAL"):
+        checks.append({"check": name, "ok": ok, "kind": kind, "detail": detail})
+
+    add("python>=3.11", sys.version_info >= (3, 11), sys.version.split()[0])
+    add("sqlite3", True, sqlite3.sqlite_version)
+    try:
+        from importlib.metadata import version as _pkg_version
+        add("jsonschema", True, _pkg_version("jsonschema"))
+    except Exception:  # noqa: BLE001 - PackageNotFoundError or missing metadata
+        add("jsonschema", False, "missing: pip install -e '.[dev]' / requirements.txt")
+    add("contracts", contracts.SCHEMA_DIR.is_dir(), f"{len(contracts.CONTRACTS)} schemas at {contracts.SCHEMA_DIR}")
+    add("/proc measurement", measure.proc_available(), "rss/fds/cpu/disk measurable" if measure.proc_available()
+        else "not available: ResourceSnapshot cannot be measured on this host (Linux /proc required)")
+    java = shutil.which("java")
+    add("java on PATH", java is not None, java or "absent (needed only for a JVM client — ADR-007 pending)", kind="TARGET_ONLY")
+    add("display", bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")),
+        "DISPLAY/WAYLAND_DISPLAY set" if (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")) else "no display (GUI client cannot run here)",
+        kind="TARGET_ONLY")
+    cfg = None
+    if args.config:
+        try:
+            cfg = load_config(args.config)
+            add("config", True, f"{args.config} valid; target.mode={cfg.target.mode}")
+            data_dir = Path(cfg.target.data_dir)
+            try:
+                data_dir.mkdir(parents=True, exist_ok=True)
+                probe = data_dir / ".doctor_write_probe"
+                probe.write_text("ok"); probe.unlink()
+                add("data_dir writable", True, str(data_dir))
+            except OSError as e:
+                add("data_dir writable", False, f"{data_dir}: {e}")
+            free = measure.disk_free_bytes(str(data_dir))
+            add("disk reserve", free is not None and free >= cfg.resources.disk_reserve_bytes,
+                f"free={free} reserve={cfg.resources.disk_reserve_bytes}" if free is not None else "unmeasurable")
+            add("secret telegram.bot_token_ref", True, _env_ref_present(cfg.telegram.bot_token_ref, os.environ), kind="PRESENCE_ONLY")
+            add("secret ai.api_key_ref", True, _env_ref_present(cfg.ai.api_key_ref, os.environ), kind="PRESENCE_ONLY")
+        except ConfigError as e:
+            add("config", False, f"REFUSED: {e}")
+    add("supervisor", True, "FakeSupervisor (simulated) + generic ProcessSupervisor (tested with a python child only); "
+        "no game-client supervisor (ADR-007)", kind="SIMULATED")
+    add("adapter", True, "FakeAdapter (simulated) + LoopbackReadOnlyAdapter (read-only, loopback endpoint, never dispatches); "
+        "no real client adapter", kind="SIMULATED")
+    add("telegram", True, "REAL transport exists (S06b-local, tested on 127.0.0.1 only); FAKE unless [telegram].enabled + opt-in flags",
+        kind="REAL_UNVERIFIED_LIVE")
+    add("ai", True, "REAL provider exists (S07b-local, tested on 127.0.0.1 only); FAKE unless [ai].enabled + opt-in flags",
+        kind="REAL_UNVERIFIED_LIVE")
+    required_ok = all(c["ok"] for c in checks if c["kind"] == "REAL")
+    print(json.dumps({"host": "THIS machine (sandbox/dev), not a target", "ready_local": required_ok, "checks": checks,
+                      "target_only_note": "java/display/client inventory belong to `osrs-ee target-check` on the owner's machine"},
+                     indent=2, ensure_ascii=False, default=str))
+    return EXIT_OK if required_ok else EXIT_INVALID
+
+
 def cmd_service(args: argparse.Namespace) -> int:
     """Supervised loop from config. Simulated mode only; device mode is refused honestly."""
     import time
@@ -258,8 +387,11 @@ def cmd_service(args: argparse.Namespace) -> int:
         print(f"REFUSED: target.mode={cfg.target.mode!r} is not runnable: no real client supervisor/adapter exists "
               "(S04b not implemented; ADR-007/ADR-008 open). Only mode='simulated' runs.", file=sys.stderr)
         return EXIT_INVALID
-    if cfg.telegram.enabled:
-        print("REFUSED: telegram.enabled=true but no real transport exists in this build (S06b not implemented).", file=sys.stderr)
+    from osrs_ee import wiring
+    try:
+        wd = wiring.build(cfg, allow_real_network=args.allow_real_network)
+    except wiring.WiringError as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
         return EXIT_INVALID
     max_ticks = args.max_ticks if args.max_ticks is not None else cfg.worker.max_ticks
     if max_ticks is None:
@@ -286,11 +418,14 @@ def cmd_service(args: argparse.Namespace) -> int:
                 time.sleep(cfg.worker.tick_seconds)
             return clock_state["now"]
 
-        svc = sv.Service(store, cfg, FakeAdapter(obs), FakeSupervisor(), None, clock=clock)
+        alert_chat = cfg.telegram.chat_ids[0] if cfg.telegram.chat_ids else 0
+        svc = sv.Service(store, cfg, FakeAdapter(obs), FakeSupervisor(), wd.outbox, clock=clock, alert_chat_id=alert_chat)
         svc.install_signal_handlers()
         res = svc.run(max_ticks=max_ticks)
         print(json.dumps({
-            "mode": "SIMULATED (FakeSupervisor/FakeAdapter; no client, no account, no network)",
+            "mode": "SIMULATED (FakeSupervisor/FakeAdapter; no client, no account)",
+            "components": wd.report(),
+            "egress_denied": wd.egress.denied(),
             "config": args.config, "store": str(cfg.store_path), "recovered_accounts": recovered,
             "state_before": state0, "final_state": res.final_state, "ticks": res.ticks, "restarts": res.restarts,
             "stop_reason": res.stop_reason, "events": [{"tick": e.tick, "kind": e.kind, "detail": e.detail} for e in res.events],
@@ -327,7 +462,16 @@ def build_parser() -> argparse.ArgumentParser:
     se.add_argument("--config", required=True, help="path to config.toml (see config.example.toml)")
     se.add_argument("--max-ticks", type=int, help="bound the run (required unless [worker].max_ticks is set)")
     se.add_argument("--fast", action="store_true", help="do not sleep between ticks (tests/demos)")
+    se.add_argument("--allow-real-network", action="store_true",
+                    help="permit REAL Telegram/AI components (also needs OSRS_EE_ALLOW_NETWORK=1 and egress allowlist)")
     se.set_defaults(fn=cmd_service)
+    cc = sub.add_parser("config-check", help="validate a TOML config; print redacted summary and component modes")
+    cc.add_argument("--config", required=True)
+    cc.add_argument("--allow-real-network", action="store_true", help="evaluate wiring as if the service were run with this flag")
+    cc.set_defaults(fn=cmd_config_check)
+    dr = sub.add_parser("doctor", help="component readiness on THIS machine (SIMULATED vs real stated per item)")
+    dr.add_argument("--config", help="optional config.toml to check data_dir/disk/secret presence")
+    dr.set_defaults(fn=cmd_doctor)
     return p
 
 
