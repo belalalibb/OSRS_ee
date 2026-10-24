@@ -4,7 +4,7 @@
 
 | الوضع | ما هو | هل يعمل الآن؟ |
 |---|---|---|
-| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + CLI | **نعم** — 161 اختبارًا offline، تثبيت موثق أدناه |
+| **A. النواة المحلية** | عقود + Store SQLite + منطق worker/telegram/advisor/release + CLI | **نعم** — 181 اختبارًا offline، تثبيت موثق أدناه |
 | **B. المحاكاة المتكاملة** | نفس النواة مع محوّلات وهمية (FakeAdapter/FakeTransport/FakeProvider) في حلقة واحدة | **نعم** — `osrs-ee demo`؛ يثبت التوصيل لا سلوك اللعبة |
 | **C. النظام المتكامل** | JVM + GUI + عميل اللعبة + Telegram حقيقي + مزوّد AI حقيقي | **لا** — المكونات غير موجودة (انظر §3 وdocs/ROADMAP.md) |
 
@@ -35,12 +35,12 @@ Windows (PowerShell): `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; pip in
 
 ### التحقق من التثبيت
 ```bash
-python -m pytest                              # المتوقع: 161 passed (pyproject يضبط testpaths=tests)
+python -m pytest                              # المتوقع: 181 passed (pyproject يضبط testpaths=tests)
 osrs-ee status                                # JSON: إصدارات + حالة كل مكوّن (REAL / FAKE only / NOT IMPLEMENTED)
 ```
 إذا ظهر `ModuleNotFoundError: jsonschema` فالبيئة الافتراضية غير مفعّلة. إذا فشل اختبار بسبب الشبكة فهذا متعمد: `tests/conftest.py` يحجب أي socket.
 
-**تم التحقق فعليًا** (2026-10-23): venv جديد → `pip install -e ".[dev]"` → `osrs-ee status` يعمل → 161 اختبارًا تمر من خارج مجلد المستودع.
+**تم التحقق فعليًا** (2026-10-23): venv جديد → `pip install -e ".[dev]"` → `osrs-ee status` يعمل → 161 اختبارًا تمر (181 بعد S04a) من خارج مجلد المستودع.
 
 ---
 
@@ -67,7 +67,16 @@ osrs-ee demo
 ```
 ينشئ مخزنًا مؤقتًا، حسابًا، إيجارًا، يمرّر intent عبر Worker + FakeAdapter (PREPARED → DISPATCHING → VERIFIED)، يرسل رسالة عبر Outbox + FakeTransport، يطلب رأي Advisor + FakeProvider، ثم abort/drain → RESTING. الخرج يحمل `"mode": "SIMULATED ..."` دائمًا. **لا يلمس أي لعبة أو شبكة.**
 
-### 2.4 الاستخدام كمكتبة
+### 2.4 أدوات S04a (تحضير الهدف؛ بلا عميل)
+```bash
+osrs-ee target-check [--client PATH] [--data-dir DIR] [--no-java-probe]   # جرد الجهاز؛ exit 2 مع قائمة «ينقص» حتى يكتمل D0؛ لا يشغّل شيئًا سوى `java -version`
+osrs-ee conformance                      # مجموعة الامتثال C1–C7 على FakeAdapter المدمج (تثبت المجموعة لا العميل)
+osrs-ee conformance --trace trace.jsonl  # المجموعة نفسها على أثر مسجّل
+osrs-ee replay trace.jsonl               # إعادة تشغيل أثر JSONL منقّح عبر Worker على مخزن مؤقت
+```
+الأثر يُنتَج بلفّ أي adapter بـ`RecordingAdapter(TraceWriter(path, Redactor(aliases=...)))`؛ التنقيح إلزامي (معرّفات الحسابات → pseudonym، أي canary/سر → السجل لا يُكتب). الـadapter الحقيقي في S04b يجب أن يجتاز `run_conformance` نفسها قبل أي استخدام.
+
+### 2.5 الاستخدام كمكتبة
 ```python
 from osrs_ee.store import Store
 from osrs_ee import worker, guards, contracts

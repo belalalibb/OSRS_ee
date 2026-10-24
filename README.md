@@ -1,6 +1,6 @@
 # OSRS_ee — أساس موحد + نواة محلية مختبرة
 
-**PUBLISHED_TO_BRANCH / PR_OPEN — نواة محلية فقط؛ النظام المتكامل (JVM/GUI/عميل) غير منفذ.** الفرع `genspark_ai_developer` منشور على GitHub وPR #1 مفتوح إلى `main`؛ قد يتقدم آخر commit محلي/حزمة على الـremote عند فقد التفويض (انظر PROGRESS). لا تشغيل حسابات، لا نشر ويب، لا أفعال مالية. 161 اختبارًا offline تمر.
+**PUBLISHED_TO_BRANCH / PR_OPEN — نواة محلية فقط؛ النظام المتكامل (JVM/GUI/عميل) غير منفذ.** الفرع `genspark_ai_developer` منشور على GitHub وPR #1 مفتوح إلى `main`؛ قد يتقدم آخر commit محلي/حزمة على الـremote عند فقد التفويض (انظر PROGRESS). لا تشغيل حسابات، لا نشر ويب، لا أفعال مالية. 181 اختبارًا offline تمر.
 
 **ابدأ من هنا:** [docs/RUNBOOK.md](docs/RUNBOOK.md) (التثبيت والتشغيل الصادق: ما يعمل/ما هو محاكى/ما هو ناقص) ثم [docs/ROADMAP.md](docs/ROADMAP.md) (الخطة الهندسية المرتبة بالاعتماديات مع ملفات/اختبارات/معايير قبول لكل مرحلة).
 
@@ -15,7 +15,7 @@
 | S07 | `osrs_ee/advisor.py` | AI استشاري فقط: consent، تنقيح، ميزانيات/مهلة، AIProposal فقط، الحقن لا يمنح سلطة | `evidence/s07_tests.md` |
 | S08 | `osrs_ee/release.py` | registry quarantine، خط إصدار صارم مع rollback متوافق/STOP، كاش محدود بلا هوية، admission بقياس، شبكة بلا fallback محظور | `evidence/s08_tests.md` |
 
-التثبيت والتشغيل: `python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"` ثم `python -m pytest` (توقع 161؛ الشبكة محجوبة في `tests/conftest.py`؛ لا يلزم أي خدمة) ثم `osrs-ee status`. نقطة الدخول الوحيدة `osrs-ee` (`osrs_ee/cli.py`) تقدم `status | validate | store init|show | demo` فقط؛ `demo` محاكاة كاملة بمحوّلات وهمية ولا يوجد أمر «تشغيل بوت». التفاصيل في RUNBOOK §1–§2.
+التثبيت والتشغيل: `python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"` ثم `python -m pytest` (توقع 181؛ الشبكة محجوبة في `tests/conftest.py`؛ لا يلزم أي خدمة) ثم `osrs-ee status`. نقطة الدخول الوحيدة `osrs-ee` (`osrs_ee/cli.py`) تقدم `status | validate | store init|show | demo` فقط؛ `demo` محاكاة كاملة بمحوّلات وهمية ولا يوجد أمر «تشغيل بوت». التفاصيل في RUNBOOK §1–§2.
 
 ما لا يمكن إنجازه هنا (S04/S05، ADR-007/008، V01–V08، T01–T35 كاختبارات هدف) موثق في [docs/OUT_OF_SANDBOX.md](docs/OUT_OF_SANDBOX.md).
 

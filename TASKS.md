@@ -27,11 +27,12 @@
 | DOC-07 | DONE_LOCAL | `docs/ROADMAP.md`: خطة مرتبة بالاعتماديات D0→S04a→S04b→S04c→S05 + S06b/S07b/S08b مع ملفات/اختبارات/معايير قبول لكل مرحلة (commit `dc51bea`) |
 | DOC-08 | DONE_LOCAL | تصحيح التناقضات (NOT_PUSHED/«OAuth غير متاح»/156) في README/PROGRESS/TASKS/FOUNDATION/OUT_OF_SANDBOX/RESUME_PROTOCOL 0.4؛ متطلبات جهاز الهدف والاختبارات التشغيلية المرتبة في OUT_OF_SANDBOX §3 |
 | PUSH-02 | BLOCKED_AUTH | دفع `7a63ebc`/`dc51bea`/تصحيح الوثائق إلى `genspark_ai_developer` وتحديث وصف PR #1؛ يتم تلقائيًا عند أول جلسة بتفويض ناجح (fetch → تأكيد `6552b84` سلف → push عادي → تحقق SHA) |
-| S04a | NEXT (لا يحتاج هدفًا) | `osrs_ee/adapters/` (recording/replay/conformance) + `target_check` + أوامر CLI؛ ROADMAP §S04a |
+| S04a | DONE_LOCAL | `osrs_ee/adapters/` (RecordingAdapter بتنقيح fail-closed، ReplayAdapter صارم، conformance C1–C7) + `target_check` (لا يشغّل شيئًا) + CLI target-check/conformance/replay؛ 20 اختبارًا؛ المجموع 181 (evidence/s04a_tests.md) |
+| S04c-local | NEXT (لا يحتاج هدفًا) | `config.py` (TOML + تحقق، مراجع فقط) + `service.py` (حلقة Store→Worker→Outbox مع supervisor وهمي، SIGTERM→abort→drain) + `config.example.toml` + اختبارات؛ الجزء الحقيقي للمشرف يبقى على الجهاز |
 | S04b/S04c/S05 | GATED_OWNER + OUT_OF_SANDBOX | adapter للقراءة فقط على الجهاز، مشرف/خدمة/إعداد، pilot مراقب؛ تحتاج ADR-007/008 وجهاز هدف وإذنًا صريحًا؛ ROADMAP |
 | S06b/S07b/S08b | PLANNED | نقل Telegram حقيقي، مزوّد AI حقيقي، قياسات فعلية — بعد S04b وبإذن؛ ROADMAP |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
-كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (161) تغطي منطق القرار الخالص فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
+كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (181) تغطي منطق القرار الخالص فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
 
 عند «تابع»: الاستئناف من GitHub (`git clone` + checkout `genspark_ai_developer`) إن كان التفويض متاحًا، وإلا من آخر حزمة في PROGRESS (RESUME_PROTOCOL §1). كل عمل جديد: commit → push للفرع (أو bundle عند فقد التفويض) → تحديث PR #1 أو فتح PR جديد.

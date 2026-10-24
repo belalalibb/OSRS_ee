@@ -4,6 +4,9 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-24 00:40 | `78f696b` (genspark_ai_developer) | `db99f5f09b25e4bea997eebd77db97333531c5ad8a22c30ae25f5239871567a6` | https://www.genspark.ai/api/files/s/k7lxllYR | s04a2: CLI + اختبارات S04a + أدلة؛ 181 اختبارًا؛ استُعيدت بنجاح بعد المسح 20 |
+| 2026-10-24 00:25 | `875d722` (genspark_ai_developer) | `ea3d4432c283003c564c23a0050ed6d3aaf9a2ed7e2059e6eb3ba3dbfea98340` | https://www.genspark.ai/api/files/s/kbXT9vIM | s04a1: adapters package + target_check (بعد المسح 19) |
+| 2026-10-23 23:55 | `983c903` (genspark_ai_developer) | `5d4aba2db9541c07747c0fbd8ead272ef37a9c3bba5b8bb644b9f27591845b00` | https://www.genspark.ai/api/files/s/AHrR96SK | d03b: تسجيل d03؛ استُعيدت بنجاح بعد المسحين 18 و19 |
 | 2026-10-23 23:45 | `7bb1683` (genspark_ai_developer) | `fa08e6c55623fbd44a3376a877937e016c247172ab9a8fa577cc464387b51ee7` | https://www.genspark.ai/api/files/s/5UjzVpjR | d03: تصحيح الوثائق DOC-08 + متطلبات الهدف + RESUME_PROTOCOL 0.4؛ 161 اختبارًا؛ تفويض GitHub غير متاح هذه الجلسة |
 | 2026-10-23 23:20 | `dc51bea` (genspark_ai_developer) | `08af7d5ce7c2536244876545e6c37f5ccaeedf53ddb5460945c01c415ad7fdb1` | https://www.genspark.ai/api/files/s/9aieKrdt | d02: RUNBOOK + ROADMAP؛ 161 اختبارًا؛ استُعيدت بنجاح بعد المسح 17 |
 | 2026-10-23 23:05 | `7a63ebc` (genspark_ai_developer) | `678eee550d9f483d0abe40b6cab8c18642fb80770a2d04fe11eae8f74ccb57e2` | https://www.genspark.ai/api/files/s/KDw02tMS | d01: pyproject/requirements/CLI + test_cli (5)؛ 161 اختبارًا |

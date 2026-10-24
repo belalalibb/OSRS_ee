@@ -1,6 +1,6 @@
 # نقطة الاستئناف — OSRS_ee
 
-الحالة: PUBLISHED_TO_BRANCH / PR_OPEN / LOCAL_AHEAD. `genspark_ai_developer` على GitHub = `6552b84`؛ محليًا/في آخر حزمة: `6552b84` → `7a63ebc` (تغليف + CLI) → `dc51bea` (RUNBOOK/ROADMAP) → تصحيح الوثائق (هذا الـcommit) **غير مدفوعة بعد** لفقد التفويض؛ `main` = `3740096f` (لم يُدمج بعد؛ PR #1 بانتظار المالك). 161 اختبارًا offline تمر محليًا (منطق قرار فقط؛ ليست قبول نظام). الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
+الحالة: PUBLISHED_TO_BRANCH / PR_OPEN / LOCAL_AHEAD. `genspark_ai_developer` على GitHub = `6552b84`؛ محليًا/في آخر حزمة: `6552b84` → `7a63ebc` (تغليف + CLI) → `dc51bea` (RUNBOOK/ROADMAP) → تصحيح الوثائق (هذا الـcommit) **غير مدفوعة بعد** لفقد التفويض؛ `main` = `3740096f` (لم يُدمج بعد؛ PR #1 بانتظار المالك). 181 اختبارًا offline تمر محليًا (منطق قرار فقط؛ ليست قبول نظام). الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا Web deployment.
 
 ## مصدر الاستئناف الأساسي (2026-10-23 فصاعدًا)
 
@@ -10,8 +10,8 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/5UjzVpjR (bundle d03، SHA-256 `fa08e6c55623fbd44a3376a877937e016c247172ab9a8fa577cc464387b51ee7`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
-| commit | `7bb1683` على `genspark_ai_developer` (161 اختبارًا تمر؛ remote GitHub ما زال عند `6552b84`) |
+| الرابط | https://www.genspark.ai/api/files/s/k7lxllYR (bundle s04a2، SHA-256 `db99f5f09b25e4bea997eebd77db97333531c5ad8a22c30ae25f5239871567a6`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
+| commit | `78f696b` على `genspark_ai_developer` (181 اختبارًا تمر؛ remote GitHub ما زال عند `6552b84`؛ التفويض لا يُطلب أثناء التطوير بقرار المالك) |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
@@ -37,4 +37,4 @@ GitHub OAuth لم يكن متاحًا للأدوات. SB-Git وAI Drive محجو
 
 ## الحالة التالية
 
-S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). S08 مكتملة محليًا (registry/release/cache/admission/network؛ 23 اختبارًا؛ المجموع 156؛ evidence/s08_tests.md). التغليف/CLI (`7a63ebc`: pyproject + `osrs-ee` status/validate/store/demo؛ 5 اختبارات؛ المجموع 161). RUNBOOK/ROADMAP (`dc51bea`). تصحيح الوثائق (DOC-08). ما خارج الصندوق موثق في docs/OUT_OF_SANDBOX.md. **التالي القابل للتنفيذ بلا هدف:** S04a (ROADMAP) بعد دفع الحزمة/الفرع. PUB-02 منجز 2026-10-23: remote كان فارغًا؛ push عادي لـ main وgenspark_ai_developer؛ PR #1 مفتوح؛ تحقق من clone جديد (شجرة مطابقة، 156 اختبارًا). المتبقي للمالك: دمج PR، إبطال المفاتيح المكشوفة، قرارات ADR-007/008، S04/S05 على جهاز حقيقي.
+S01 مكتملة محليًا (43 اختبارًا؛ evidence/s01_tests.md). S02 مكتملة محليًا (ADR-003 = SQLite؛ 34 اختبار Store؛ المجموع 77؛ evidence/s02_tests.md). S03 مكتملة محليًا (worker/scheduler/FakeAdapter/abort-drain/health؛ 20 اختبارًا؛ المجموع 97؛ evidence/s03_tests.md). S06 مكتملة محليًا (Telegram fake-first: RBAC/redaction/outbox/approval callbacks؛ 22 اختبارًا؛ المجموع 119؛ evidence/s06_tests.md). S07 مكتملة محليًا (AI advisory fake-first؛ 14 اختبارًا؛ المجموع 133؛ evidence/s07_tests.md). S08 مكتملة محليًا (registry/release/cache/admission/network؛ 23 اختبارًا؛ المجموع 156؛ evidence/s08_tests.md). التغليف/CLI (`7a63ebc`: pyproject + `osrs-ee` status/validate/store/demo؛ 5 اختبارات؛ المجموع 161). RUNBOOK/ROADMAP (`dc51bea`). تصحيح الوثائق (DOC-08). ما خارج الصندوق موثق في docs/OUT_OF_SANDBOX.md. S04a منجزة محليًا (`875d722`, `78f696b`: adapters recording/replay/conformance + target_check + CLI؛ 20 اختبارًا؛ المجموع 181؛ evidence/s04a_tests.md). **التالي بلا هدف:** S04c-local (config/service مع supervisor وهمي) ثم S06b/S07b بخوادم محلية وهمية. PUB-02 منجز 2026-10-23: remote كان فارغًا؛ push عادي لـ main وgenspark_ai_developer؛ PR #1 مفتوح؛ تحقق من clone جديد (شجرة مطابقة، 156 اختبارًا). المتبقي للمالك: دمج PR، إبطال المفاتيح المكشوفة، قرارات ADR-007/008، S04/S05 على جهاز حقيقي.
