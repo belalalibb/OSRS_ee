@@ -1,6 +1,6 @@
 # ROADMAP — خطة التنفيذ الهندسية إلى المنتج المتكامل
 
-آخر تحديث: 2026-10-24. مرتبة حسب الاعتماديات؛ كل مرحلة تذكر: الهدف، ما يسبقها، الملفات المطلوب إنشاؤها/تعديلها، الاختبارات، معيار القبول، ومن ينفذها وأين. **المنجز**: S01–S03، S06a، S07a، S08a، **S04a** (أدوات تسجيل/إعادة/امتثال/جرد الهدف؛ `evidence/s04a_tests.md`)، **S04c-local** (config TOML fail-closed + Supervisor Protocol/FakeSupervisor + Service loop + CLI `service` محاكاة فقط؛ `evidence/s04c_local_tests.md`)، **S06b-local** و**S07b-local** (نقل Telegram ومزوّد AI حقيقيان بـurllib مختبران ضد خادم loopback وهمي فقط؛ 226 اختبارًا؛ `evidence/s06b_local_tests.md`, `evidence/s07b_local_tests.md`). **كل T01–T35 وV01–V08 تبقى بحالتها** (NOT_RUN / REPORTED_UNVERIFIED) حتى تُنفَّذ على الهدف بدليل.
+آخر تحديث: 2026-10-24. مرتبة حسب الاعتماديات؛ كل مرحلة تذكر: الهدف، ما يسبقها، الملفات المطلوب إنشاؤها/تعديلها، الاختبارات، معيار القبول، ومن ينفذها وأين. **المنجز**: S01–S03، S06a، S07a، S08a، **S04a** (أدوات تسجيل/إعادة/امتثال/جرد الهدف؛ `evidence/s04a_tests.md`)، **S04c-local** (config TOML fail-closed + Supervisor Protocol/FakeSupervisor + Service loop + CLI `service` محاكاة فقط؛ `evidence/s04c_local_tests.md`)، **S06b-local** و**S07b-local** (نقل Telegram ومزوّد AI حقيقيان بـurllib مختبران ضد خادم loopback وهمي فقط؛ `evidence/s06b_local_tests.md`, `evidence/s07b_local_tests.md`)، **S04b-prep + SUP-02 + WIRE-01 + CLI-02 + tests/target + test_failures** (محوّل قراءة loopback، مشرف عمليات عام، قياس /proc، egress، بوابة الجاهزية، wiring opt-in، `config-check`/`doctor`، اختبارات هدف تُتخطى بصدق، اختبارات فشل؛ `evidence/s04b_prep_wire01_tests.md`)؛ **282 اختبارًا تمر + 8 تُتخطى**، متحقق من استنساخ نظيف (`evidence/clean_env_2026-10-24.md`). **كل T01–T35 وV01–V08 تبقى بحالتها** (NOT_RUN / REPORTED_UNVERIFIED) حتى تُنفَّذ على الهدف بدليل.
 
 ```
  D0 قرارات ──► S04a أدوات تحقق محلية ──► S04b (جهاز) read-only adapter ──► S04c supervisor ──► S05 pilot
@@ -43,9 +43,11 @@
 
 ---
 
-## S04b — adapter حقيقي للقراءة فقط (على جهاز المالك؛ بعد D0)
+## S04b — adapter حقيقي للقراءة فقط (على جهاز المالك؛ بعد D0) — **التحضير المحلي DONE_LOCAL 2026-10-24** (commits `d47eebb`, `e68c75e`, `f6d84c4`)
 
 **الهدف:** تنفيذ `Adapter.observe()` فعلي من عميل حقيقي **بلا أي dispatch** (dispatch يعيد `NOT_SENT` دائمًا في هذه المرحلة)، وقياس الموارد الفعلي.
+
+**منجز محليًا (الملفات المخططة أدناه نُفِّذت بأسماء نهائية):** `osrs_ee/adapters/loopback_readonly.py` (= `<client>_readonly` للبديل A في ADR-008؛ `dispatch()` → `NEVER_DISPATCH`)، `osrs_ee/measure.py` (/proc بلا psutil)، `osrs_ee/egress.py` (= `egress_allowlist`؛ `guarded_opener`)، `tests/target/` (8 اختبارات تُتخطى بصدق؛ T06/T10/T30/T31/T33 + امتثال). **المتبقي على الجهاز فقط:** نقطة قراءة حقيقية (plugin/agent جانب العميل، خارج هذا المستودع) + `ProcessSpec` للعميل + تشغيل `pytest tests/target -m target` وحفظ الأدلة. الجدول التالي يُبقي الخطة الأصلية للمقارنة:
 
 | ملف | المحتوى |
 |---|---|
@@ -66,9 +68,9 @@
 
 ---
 
-## S04c — supervisor عمليات — **الجزء المحلي DONE_LOCAL 2026-10-24** (commits `b26a731`, `f2564e3`, `4fdb0b9`, `8c4216f`)؛ الجزء على الجهاز بعد S04b
+## S04c — supervisor عمليات — **الجزء المحلي DONE_LOCAL 2026-10-24** (commits `b26a731`, `f2564e3`, `4fdb0b9`, `8c4216f`, ثم `1ff58e7`, `e68c75e`)؛ الجزء على الجهاز بعد S04b
 
-منجز محليًا: `config.py` + `config.example.toml`، `supervisor.py` (Protocol + `FakeSupervisor` لا يطلق شيئًا)، `service.py` (قبول/بدء/إيقاف منظم/إعادة تشغيل محدودة/ضغط/تنبيهات منقّحة)، CLI `service --config` (simulated فقط)، 22 اختبارًا. **المتبقي على الجهاز:** تنفيذ `Supervisor` حقيقي (owned child أو attach-only حسب ADR-007) وربطه بـadapter S04b؛ معيار القبول أدناه لم يُنفَّذ.
+منجز محليًا: `config.py` + `config.example.toml`، `supervisor.py` (Protocol + `FakeSupervisor` + **`ProcessSpec`/`ProcessSupervisor` عام حقيقي**: subprocess في session خاصة، جاهزية بملف، SIGTERM→SIGKILL، دليل خروج، قياس /proc)، `service.py` (قبول بقياس المضيف/بدء/**بوابة جاهزية** `STARTING→RUNNING` بدليل فقط مع `ready_timeout_seconds`/إيقاف منظم/إعادة تشغيل محدودة/ضغط/تنبيهات منقّحة)، CLI `service --config`، 22 + 16 اختبارًا (منها 11 بعملية python ابنة حقيقية). **المتبقي على الجهاز:** `ProcessSpec` لعميل حقيقي (owned child؛ أو صنف attach-only صغير إن اختار المالك البديل B في ADR-007) وربطه بـadapter S04b؛ معيار القبول أدناه لم يُنفَّذ.
 
 | ملف | المحتوى |
 |---|---|
@@ -99,10 +101,10 @@
 | `osrs_ee/transports/telegram_poll.py` | long polling → `InboundMessage`/`InboundCallback`؛ كل تحديث يمر عبر `AccessPolicy` |
 | `tests/test_telegram_http.py` | مع خادم HTTP محلي وهمي (لا إنترنت): 200/429/5xx/شكل الرد |
 
-**معيار القبول:** T02 (canary لا يظهر في chat فعلي بمفتاح اختبار)، T03 (مستخدم خاطئ/replay مرفوض فعليًا).
+**الربط بالخدمة (WIRE-01) منجز** (`fd3a4d3`, `7f40c1d`, `b32222b`): `[telegram]` في config، `wiring.py` يبني النقل/الـpoller/الـAccessPolicy فقط عند opt-in رباعي، `service --allow-real-network`. **معيار القبول:** T02 (canary لا يظهر في chat فعلي بمفتاح اختبار)، T03 (مستخدم خاطئ/replay مرفوض فعليًا) — الاختباران جاهزان في `tests/target/test_live_services.py` وينتظران `OSRS_EE_TG_TOKEN`/`OSRS_EE_TG_CHAT_ID` من المالك.
 
 ## S07b — مزوّد AI حقيقي — **الكود DONE_LOCAL 2026-10-24** (commits `624248d`, `2763c2e`)؛ لم يُتصل بأي مزوّد فعلي
-`osrs_ee/providers/openai_compat.py` ينفذ `Provider.complete` بميزانية ومهلة؛ المفتاح من البيئة؛ اختبار بخادم وهمي محلي. بدون هذا، النظام يعمل بلا AI (الـ advisor اختياري بالتصميم).
+`osrs_ee/providers/openai_compat.py` ينفذ `Provider.complete` بميزانية ومهلة؛ المفتاح من البيئة؛ اختبار بخادم وهمي محلي. **الربط منجز** عبر `[ai]` في config + `wiring.py` (نفس opt-in الرباعي)؛ T35 الحي جاهز في `tests/target` وينتظر `OSRS_EE_AI_KEY`. بدون هذا، النظام يعمل بلا AI (الـ advisor اختياري بالتصميم).
 
 ## S08b — canary إصدار حي (بعد S05)
 ربط `Release` بـ supervisor: APPROVED → DRAINING (حقيقي) → CANARY (جلسة واحدة بإذن) → ACTIVE؛ فشل → rollback متوافق أو STOP. T15 على الهدف.
@@ -120,4 +122,4 @@
 5. كل تغيير: commit → push للفرع → PR؛ عند فقد التفويض: bundle + sha256 + رابط (RESUME_PROTOCOL).
 
 ## ما الذي يمكن للوكيل تنفيذه الآن دون المالك
-S04a وS04c-local وS06b-local وS07b-local منجزة. **لم يتبقَّ شيء قابل للتنفيذ محليًا بلا المالك** سوى صيانة/تحسينات؛ كل ما بعده يحتاج جهازًا حقيقيًا أو قرار D0 أو مفاتيح اختبار. كل ما يحتاج جهازًا حقيقيًا أو قرار D0 معلّم صراحة أعلاه.
+S04a، S04c-local، S06b-local، S07b-local، S04b-prep، SUP-02، WIRE-01، CLI-02، tests/target، test_failures، والتحقق من بيئة نظيفة منجزة. **لم يتبقَّ شيء قابل للتنفيذ محليًا بدليل بلا المالك** (التدقيق المفصل بالأسباب في TASKS.md «إعادة تدقيق TASKS»)؛ كل ما بعده يحتاج جهازًا حقيقيًا أو قرار D0 أو مفاتيح اختبار. كل ما يحتاج جهازًا حقيقيًا أو قرار D0 معلّم صراحة أعلاه.

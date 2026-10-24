@@ -31,11 +31,30 @@
 | S04c-local | DONE_LOCAL | `config.py` (TOML fail-closed، مراجع فقط، auth_mode مقفول) + `supervisor.py` (Protocol + FakeSupervisor) + `service.py` (قبول→بدء→إيقاف منظم؛ UNKNOWN/لا exit proof→RECOVERY_REQUIRED؛ إعادة تشغيل محدودة→CIRCUIT_OPEN؛ ضغط→إيقاف؛ تنبيهات منقّحة) + CLI `service` (simulated فقط) + `config.example.toml`؛ 22 اختبارًا؛ المجموع 203 (evidence/s04c_local_tests.md)؛ المشرف الحقيقي يبقى على الجهاز |
 | S06b-local | DONE_LOCAL | `osrs_ee/transports/` TelegramHttpTransport (urllib، `ref:env:` → canary، allowlist، 429/5xx/4xx) + TelegramPoller/parse_update صارم؛ `tests/fake_http.py`؛ 14 اختبارًا؛ المجموع 217 (evidence/s06b_local_tests.md)؛ الربط بالخدمة وT02/T03 على دردشة حقيقية يحتاجان مفتاح اختبار من المالك |
 | S07b-local | DONE_LOCAL | `osrs_ee/providers/openai_compat.py` (urllib، `ref:env:` → canary، allowlist، مهلة مقيدة بالـdeadline، حد حجم)؛ 9 اختبارات مع تكامل Advisor؛ المجموع 226 (evidence/s07b_local_tests.md)؛ لم يُتصل بأي مزوّد حقيقي |
-| WIRE-01 | GATED_OWNER | ربط النقل/المزوّد الحقيقيين بـ`service`/CLI يحتاج: مفتاح اختبار Telegram ودردشة اختبار، قرار تفعيل AI، وإذنًا صريحًا؛ حتى ذلك `service` يرفض `telegram.enabled=true` |
-| S04b/S04c/S05 | GATED_OWNER + OUT_OF_SANDBOX | adapter للقراءة فقط على الجهاز، مشرف/خدمة/إعداد، pilot مراقب؛ تحتاج ADR-007/008 وجهاز هدف وإذنًا صريحًا؛ ROADMAP |
-| S06b/S07b/S08b | PLANNED | نقل Telegram حقيقي، مزوّد AI حقيقي، قياسات فعلية — بعد S04b وبإذن؛ ROADMAP |
+| PKG-01 | DONE_LOCAL | `5c4716c`: إعلان الحزم الفرعية adapters/transports/providers في pyproject (خطأ حقيقي وُجد في تثبيت نظيف) + `tests/test_packaging.py` (2) |
+| S04b-prep | DONE_LOCAL | `d47eebb`: `adapters/loopback_readonly.py` (قراءة فقط عبر 127.0.0.1، `dispatch()` دائمًا `NEVER_DISPATCH`)، `measure.py` (/proc، None بصدق)، `egress.py` (allowlist + `guarded_opener` يرفض قبل `connect()`)؛ 15 اختبارًا؛ **لا نقطة قراءة حقيقية بعد (ADR-008)** — evidence/s04b_prep_wire01_tests.md |
+| SUP-02 | DONE_LOCAL | `1ff58e7` بوابة الجاهزية في الخدمة (`LEASED→STARTING→RUNNING` فقط بدليل جاهزية؛ `ready_timeout_seconds`؛ فشل البدء → RECOVERY_REQUIRED) + `e68c75e` `ProcessSupervisor` عام (subprocess، ready_file، SIGTERM→SIGKILL، دليل خروج، قياس /proc) و`host_measure` للقبول؛ 16 اختبارًا بعملية python ابنة؛ **لم يُشغَّل JVM/GUI قط (ADR-007)** |
+| WIRE-01 | DONE_LOCAL (التشغيل الحي GATED_OWNER) | `fd3a4d3` إعداد `[telegram]`/`[ai]`؛ `7f40c1d` `wiring.py` يبني REAL/FAKE/DISABLED؛ شبكة حقيقية = `--allow-real-network` + `OSRS_EE_ALLOW_NETWORK=1` + allowlist + سر في البيئة وإلا `WiringError`؛ 7 اختبارات ضد خادم وهمي. **لم يُرسل أي طلب إلى Telegram/AI فعلي**؛ T02/T03/T35 في tests/target تحتاج مفاتيح المالك |
+| CLI-02 | DONE_LOCAL | `b32222b`: `osrs-ee config-check` (ملخص منقّح + أوضاع المكوّنات)، `osrs-ee doctor` (REAL/SIMULATED/TARGET_ONLY/PRESENCE_ONLY/REAL_UNVERIFIED_LIVE، `ready_local`)، `service --allow-real-network`؛ 5 اختبارات |
+| TEST-TARGET | DONE_LOCAL (التنفيذ NOT_RUN) | `f6d84c4`: `tests/target/` بوابات `OSRS_EE_TARGET=1`/`OSRS_EE_ALLOW_NETWORK=1`؛ T10/T30/T06/T31 عملية، S04b/T33 محوّل، T02/T03/T35 حية؛ 8 تُتخطى بصدق هنا؛ RUNBOOK §4 |
+| TEST-FAIL | DONE_LOCAL | `95533ab`: `tests/test_failures.py` (11) — استعادة فقد طاقة محاكى، DB تالف/للقراءة فقط/مجلد غير قابل للكتابة، حدود RSS/FD/قرص، نقل تنبيهات فاشل محدود، `restart_budget=0`، حساب RECOVERY_REQUIRED لا يُلمس، canary مرفوض |
+| CLEAN-ENV | DONE | `1daf93a`: استنساخ نظيف من bundle + venv جديد → كشف خطأ ترتيب استيراد `ssl` في conftest وأُصلح → 282 passed, 8 skipped؛ evidence/clean_env_2026-10-24.md |
+| DOC-09 | DONE_LOCAL | `e42f52e` RUNBOOK (بوابة الجاهزية، opt-in، config-check/doctor، جدول المكوّنات المحلية غير المُثبتة، §4 tests/target) + هذا الـcommit: TASKS/ROADMAP/OUT_OF_SANDBOX (بدائل ADR-007/008 وتوصية فنية)/README/PROGRESS/bundles |
+| S04b/S04c-target/S05 | GATED_OWNER + OUT_OF_SANDBOX | **المتبقي على الهدف فقط**: نقطة قراءة حقيقية + `ProcessSpec` لعميل حقيقي (ADR-007/008)، تشغيل `tests/target -m target`، pilot مراقب بإذن؛ الكود المحلي المساند جاهز (S04b-prep/SUP-02/TEST-TARGET)؛ ROADMAP |
+| S06b/S07b/S08b-live | GATED_OWNER | الكود مكتمل محليًا ومربوط (WIRE-01)؛ المتبقي حصرًا: تشغيل حي بمفتاح Telegram/دردشة اختبار (T02/T03)، مفتاح AI اختياري (T35)، قياسات على OS الهدف (S08b) — بإذن صريح |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
-كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (226) تغطي منطق القرار الخالص فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
+كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (282 تمر + 8 تُتخطى) تغطي منطق القرار والمكوّنات المحلية ضد عمليات/خوادم وهمية فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.
 
-عند «تابع»: الاستئناف من GitHub (`git clone` + checkout `genspark_ai_developer`) إن كان التفويض متاحًا، وإلا من آخر حزمة في PROGRESS (RESUME_PROTOCOL §1). كل عمل جديد: commit → push للفرع (أو bundle عند فقد التفويض) → تحديث PR #1 أو فتح PR جديد.
+## إعادة تدقيق TASKS (2026-10-24، بعد DOC-09) — ما الذي يمكن تنفيذه بعد بلا المالك؟
+| بند | هل يمكن محليًا؟ | السبب |
+|---|---|---|
+| محوّل لعبة حقيقي / `ProcessSpec` لعميل | **لا** | يحتاج ADR-007 (OS/عميل) وADR-008 (مصدر الحالة/auth) وجهازًا بعميل مرخص؛ أي تنفيذ هنا سيكون تخمينًا غير قابل للاختبار |
+| تشغيل T02/T03/T35 الحية | **لا** | تحتاج token/دردشة/مفتاح من المالك؛ الشبكة محجوبة بالتصميم؛ الكود والاختبارات جاهزة للتشغيل بأمر واحد (RUNBOOK §4) |
+| V01–V08 | **لا** | تحتاج source revisions مثبتة وجهاز تحقق |
+| daemon طويل العمر بلا `--max-ticks` | **لا (مرفوض عمدًا)** | قرار تصميم: لا تشغيل غير محدود قبل S04b على الهدف وإذن S05 |
+| PUSH-02 / تحديث PR #1 | **لا** | يحتاج تفويض GitHub؛ مؤجل للنهاية بقرار المالك |
+| تحسينات محلية إضافية (مزيد من الاختبارات، إعادة هيكلة) | ممكنة لكن **غير مطلوبة** | التغطية الحالية تغطي كل مسارات الفشل المحددة في التوجيه؛ إضافة كود بلا هدف حقيقي تزيد السطح دون دليل — تُؤجَّل إلى ما بعد قرارات المالك |
+النتيجة: **لم يتبقَّ عمل قابل للتنفيذ محليًا بدليل**؛ كل المتبقي مُدرج أعلاه بسببه.
+
+عند «تابع»: الاستئناف من آخر حزمة في evidence/bundles.md (التفويض لا يُطلب أثناء التطوير بقرار المالك)؛ وإلا من GitHub (`git clone` + checkout `genspark_ai_developer`) إن كان التفويض متاحًا، وإلا من آخر حزمة في PROGRESS (RESUME_PROTOCOL §1). كل عمل جديد: commit → push للفرع (أو bundle عند فقد التفويض) → تحديث PR #1 أو فتح PR جديد.
