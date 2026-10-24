@@ -6,6 +6,10 @@ injected, nothing sleeps here, and every state change is a Store transition.
 
 Guarantees exercised by tests/test_service.py:
 - start requires READY and an admitted (fresh, in-limit) resource snapshot;
+- LEASED -> STARTING is written before the supervisor starts; STARTING -> RUNNING
+  happens only on supervisor readiness proof; no proof within
+  health.ready_timeout_seconds (or an early exit) fails the start into
+  RECOVERY_REQUIRED (owner reconciles; never silently retried);
 - stop → abort → drain → supervisor stop; final state is RESTING, or
   RECOVERY_REQUIRED when a command is UNKNOWN or the process gives no exit proof;
   the loop never writes READY except for a budgeted restart from RESTING;
@@ -98,6 +102,8 @@ class Service:
         self.restarts = 0
         self.stop_reason: Optional[str] = None
         self._circuit_open = False
+        self._starting_since: Optional[datetime] = None
+        self._starting_epoch = 0
 
     # ---- control -----------------------------------------------------------
     def request_stop(self, reason: str = "operator.stop") -> None:
@@ -144,14 +150,63 @@ class Service:
         self.store.acquire_lease(self.account_id, lease_id=f"lease_service{epoch:03d}", session_id=f"{self.session_id}_{epoch:03d}",
                                  client_instance_id=self.client_instance_id, expected_version=acc.state_version,
                                  ttl_seconds=self.lease_ttl_seconds, now=now)
+        acc = self.store.get_account(self.account_id)  # LEASED
+        self.store.transition(self.account_id, "STARTING", expected_version=acc.state_version, reason="service.start", now=now)
         self.sup.start(now)
-        self.worker = Worker(self.store, self.adapter, self.account_id, self.worker_config, health=self.health)
-        self.worker.start(now=now)
-        for intent in self.pending_intents:
-            self.worker.enqueue(intent)
-        self.pending_intents = []
-        self._emit("session.started", f"epoch {epoch}")
-        return True
+        self._starting_since, self._starting_epoch = now, epoch
+        self._emit("session.starting", f"epoch {epoch}; waiting for readiness proof")
+        return self._poll_ready(now)
+
+    def _poll_ready(self, now: datetime) -> bool:
+        """STARTING: the session becomes RUNNING only on supervisor readiness proof.
+
+        No proof within ``health.ready_timeout_seconds`` (or the process exiting
+        first) is a failed start handled by ``_settle_starting``.
+        """
+        assert self._starting_since is not None
+        if self.sup.exited(now):
+            self._emit("start.failed", "process exited before readiness", alert=True)
+            self._settle_starting(now, "start.exited")
+            return False
+        if self.sup.ready(now):
+            self.worker = Worker(self.store, self.adapter, self.account_id, self.worker_config, health=self.health)
+            self.worker.start(now=now)  # STARTING -> RUNNING
+            for intent in self.pending_intents:
+                self.worker.enqueue(intent)
+            self.pending_intents = []
+            self._starting_since = None
+            self._emit("session.started", f"epoch {self._starting_epoch}")
+            return True
+        if (now - self._starting_since).total_seconds() > self.cfg.health.ready_timeout_seconds:
+            self._emit("start.failed", f"no readiness proof within {self.cfg.health.ready_timeout_seconds}s", alert=True)
+            self._settle_starting(now, "start.timeout")
+            return False
+        return True  # keep waiting (still STARTING)
+
+    def _settle_starting(self, now: datetime, reason: str) -> str:
+        """Failed start: supervisor stop → release lease → STARTING -> RECOVERY_REQUIRED.
+
+        The state machine deliberately has no STARTING -> RESTING edge: a client
+        that never produced readiness proof is an unknown environment, not a
+        known-good one, so the owner reconciles (RECON path) — the loop never
+        retries a failed start by itself. Missing exit proof is recorded in the
+        transition reason and as an alert.
+        """
+        self._starting_since = None
+        self.sup.stop(now)
+        exited = self.sup.exited(now)
+        lease = self.store.active_lease(self.account_id)
+        if lease is not None:
+            self.store.release_lease(lease.lease_id, session_epoch=lease.session_epoch, reason=reason, now=now)
+        acc = self.store.get_account(self.account_id)
+        state = acc.state
+        if acc.state == "STARTING":
+            state = self.store.transition(self.account_id, "RECOVERY_REQUIRED", expected_version=acc.state_version,
+                                          reason=reason + ("" if exited else "+no_exit_proof"), now=now).state
+        if not exited:
+            self._emit("supervisor.no_exit_proof", "process did not exit on stop", alert=True)
+        self._emit("session.settled", f"{reason} -> {state}", alert=True)
+        return state
 
     def _settle(self, now: datetime, reason: str) -> str:
         """abort → drain → supervisor stop. RESTING only with exit proof and no UNKNOWN."""
@@ -190,6 +245,11 @@ class Service:
         self.ticks += 1
         if self._circuit_open:
             return False
+        if self.worker is None and self._starting_since is not None:
+            if self.stop_reason is not None:
+                self._settle_starting(now, self.stop_reason)
+                return False
+            return self._poll_ready(now)  # False = failed start; True = running or still waiting
         if self.worker is None:
             if self.stop_reason is not None:
                 return False

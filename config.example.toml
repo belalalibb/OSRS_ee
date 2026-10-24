@@ -21,6 +21,7 @@ tick_seconds = 1.0
 freeze_after_seconds = 30
 restart_budget = 3
 restart_window_seconds = 900
+ready_timeout_seconds = 60   # STARTING -> RUNNING needs supervisor readiness proof within this window
 
 [resources]
 rss_limit_bytes = 2147483648

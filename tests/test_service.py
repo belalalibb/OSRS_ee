@@ -218,3 +218,60 @@ class Alerts(ServiceCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Readiness(ServiceCase):
+    """STARTING -> RUNNING only on supervisor readiness proof (general logic; FakeSupervisor)."""
+
+    def test_slow_readiness_keeps_starting_then_runs(self):
+        svc = self.make(sup=FakeSupervisor(ready_after_calls=3))
+        self.assertTrue(svc.run_once())
+        self.assertEqual(self.store.get_account(ACC).state, "STARTING")
+        self.assertIsNone(svc.worker)
+        self.assertTrue(svc.run_once())
+        self.assertEqual(self.store.get_account(ACC).state, "STARTING")
+        self.assertTrue(svc.run_once())
+        self.assertEqual(self.store.get_account(ACC).state, "RUNNING")
+        self.assertIsNotNone(svc.worker)
+        kinds = [e.kind for e in svc.events]
+        self.assertEqual(kinds.count("session.starting"), 1)
+        self.assertEqual(kinds.count("session.started"), 1)
+        self.assertEqual([t[1] for t in self.store.transitions(ACC)][-3:], ["LEASED", "STARTING", "RUNNING"])
+        self.assertIn("service.start", self.reasons())
+
+    def test_readiness_timeout_fails_start_into_recovery_required(self):
+        svc = self.make(sup=FakeSupervisor(ready_after_calls=10_000),
+                        **{"ready_timeout_seconds = 60": "ready_timeout_seconds = 2"})
+        res = svc.run(max_ticks=10)
+        self.assertEqual(res.final_state, "RECOVERY_REQUIRED")
+        self.assertIn("start.failed", res.kinds())
+        self.assertNotIn("session.started", res.kinds())
+        self.assertNotIn("restart", res.kinds())
+        self.assertEqual((self.sup.starts, self.sup.stops), (1, 1))
+        self.assertIsNone(self.store.active_lease(ACC))
+        self.assertIn("start.timeout", self.reasons())
+
+    def test_exit_before_readiness_fails_start(self):
+        svc = self.make(sup=FakeSupervisor(ready_after_calls=5))
+        svc.run_once()  # STARTING, waiting
+        self.sup._exited = True  # the process died before ever being ready
+        self.assertFalse(svc.run_once())
+        self.assertEqual(self.store.get_account(ACC).state, "RECOVERY_REQUIRED")
+        self.assertIn("start.exited", self.reasons())
+
+    def test_stop_while_starting_settles_without_running(self):
+        svc = self.make(sup=FakeSupervisor(ready_after_calls=5))
+        svc.run_once()
+        svc.request_stop("operator.stop")
+        self.assertFalse(svc.run_once())
+        self.assertEqual(self.store.get_account(ACC).state, "RECOVERY_REQUIRED")
+        self.assertNotIn("session.started", [e.kind for e in svc.events])
+        self.assertEqual(self.sup.stops, 1)
+
+    def test_no_exit_proof_on_failed_start_is_recorded(self):
+        svc = self.make(sup=FakeSupervisor(ready_after_calls=10_000, exit_on_stop=False),
+                        **{"ready_timeout_seconds = 60": "ready_timeout_seconds = 1"})
+        res = svc.run(max_ticks=10)
+        self.assertEqual(res.final_state, "RECOVERY_REQUIRED")
+        self.assertIn("supervisor.no_exit_proof", res.kinds())
+        self.assertTrue(any(r.endswith("+no_exit_proof") for r in self.reasons()))

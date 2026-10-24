@@ -169,9 +169,14 @@ class Worker:
             abort_requested=self._abort_requested, unknown_commands_pending=self.store.unknown_pending(self.account_id))
 
     def start(self, *, now: datetime) -> SessionContext:
-        """LEASED -> STARTING -> RUNNING (two CAS transitions through the Store)."""
+        """LEASED -> STARTING -> RUNNING (CAS transitions through the Store).
+
+        When the caller (Service) already moved the account to STARTING while it
+        waited for the supervisor's readiness proof, only STARTING -> RUNNING is
+        performed here."""
         acc = self.store.get_account(self.account_id)
-        acc = self.store.transition(self.account_id, "STARTING", expected_version=acc.state_version, reason="worker.start", now=now)
+        if acc.state != "STARTING":
+            acc = self.store.transition(self.account_id, "STARTING", expected_version=acc.state_version, reason="worker.start", now=now)
         self.store.transition(self.account_id, "RUNNING", expected_version=acc.state_version, reason="worker.start", now=now)
         return self.context()
 

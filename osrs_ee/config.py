@@ -48,6 +48,7 @@ class HealthLimits:
     freeze_after_seconds: int = 30
     restart_budget: int = 3
     restart_window_seconds: int = 900
+    ready_timeout_seconds: int = 60
 
 
 @dataclass(frozen=True)
@@ -176,6 +177,7 @@ def _validate(cfg: ServiceConfig) -> None:
     _require(_is_int(hl.freeze_after_seconds) and 1 <= hl.freeze_after_seconds <= 3600, "health.freeze_after_seconds in [1, 3600]")
     _require(_is_int(hl.restart_budget) and 0 <= hl.restart_budget <= 100, "health.restart_budget in [0, 100]")
     _require(_is_int(hl.restart_window_seconds) and 1 <= hl.restart_window_seconds <= 86400, "health.restart_window_seconds in [1, 86400]")
+    _require(_is_int(hl.ready_timeout_seconds) and 1 <= hl.ready_timeout_seconds <= 3600, "health.ready_timeout_seconds in [1, 3600]")
 
     r = cfg.resources
     _require(_is_int(r.rss_limit_bytes) and r.rss_limit_bytes >= 64 * 1024 ** 2, "resources.rss_limit_bytes must be >= 64 MiB")
