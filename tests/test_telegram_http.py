@@ -16,7 +16,7 @@ from osrs_ee.transports.telegram_poll import parse_update
 from tests.fake_http import FakeHttpServer
 from tests.test_store import T0
 
-TOKEN = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"
+TOKEN = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"  # secret-scan: allow (synthetic canary)
 ENV = {"TG_BOT_TOKEN": TOKEN}
 LOOPBACK = frozenset({"127.0.0.1"})
 

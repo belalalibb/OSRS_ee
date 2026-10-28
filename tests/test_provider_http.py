@@ -16,7 +16,7 @@ from tests.fake_http import FakeHttpServer
 from tests.test_advisor import CTX, INC, proposal
 from tests.test_store import ACC, T0, fixture
 
-KEY = "sk-FAKE-KEY-0123456789abcdefghijklmnopqrstuvwxyz"
+KEY = "sk-FAKE-KEY-0123456789abcdefghijklmnopqrstuvwxyz"  # secret-scan: allow (synthetic canary)
 ENV = {"AI_API_KEY": KEY}
 LOOPBACK = frozenset({"127.0.0.1"})
 

@@ -57,7 +57,7 @@ class CLI(unittest.TestCase):
         parser = cli.build_parser()
         names = set(parser._subparsers._group_actions[0].choices)  # type: ignore[attr-defined]
         self.assertEqual(names, {"status", "validate", "store", "demo", "target-check", "conformance", "replay", "service",
-                                 "config-check", "doctor"})
+                                 "config-check", "doctor", "secret-scan"})
         self.assertFalse(names & {"run", "run-bot", "start", "play", "login"})
 
 
@@ -185,7 +185,7 @@ class CLIWire01(unittest.TestCase):
 
     def test_config_check_refuses_real_without_opt_in_and_never_prints_secret_values(self):
         with tempfile.TemporaryDirectory() as d:
-            os.environ["OSRS_EE_TEST_TG"] = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"
+            os.environ["OSRS_EE_TEST_TG"] = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"  # secret-scan: allow (synthetic canary)
             try:
                 cfgp = self._cfg(d, **{"enabled = false\n": 'enabled = true\nbot_token_ref = "ref:env:OSRS_EE_TEST_TG"\n',
                                       "chat_ids = []": "chat_ids = [1]",

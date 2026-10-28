@@ -224,7 +224,7 @@ class Egress(unittest.TestCase):
             t = TelegramHttpTransport("ref:env:TG_BOT_TOKEN", red,
                                       TransportConfig(base_url=srv.base_url, allowed_hosts=frozenset({"127.0.0.1"}),
                                                       timeout_seconds=1.0),
-                                      env={"TG_BOT_TOKEN": "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"},
+                                      env={"TG_BOT_TOKEN": "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"},  # secret-scan: allow (synthetic canary)
                                       opener=guarded_opener(policy))
             res = t.send(OutboundMessage(chat_id=10, text="hello"), now=T0)
             self.assertFalse(res.ok)

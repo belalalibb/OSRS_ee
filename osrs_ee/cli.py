@@ -447,6 +447,32 @@ def cmd_service(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_secret_scan(args: argparse.Namespace) -> int:
+    """Metadata-only secret-shape scan of a tree (default: cwd). Exit 2 when findings exist."""
+    from osrs_ee import secret_scan as ss
+    root = Path(args.path or ".")
+    if not root.exists():
+        print(f"no such path: {root}", file=sys.stderr)
+        return EXIT_ERROR
+    findings, n = ss.scan_path(root)
+    perms: list[dict] = []
+    if args.config:
+        from osrs_ee.config import ConfigError, load_config
+        try:
+            cfg = load_config(args.config)
+        except ConfigError as e:
+            print(f"CONFIG REFUSED: {e}", file=sys.stderr)
+            return EXIT_INVALID
+        data = Path(cfg.target.data_dir)
+        perms = ss.check_private_permissions(p for p in (data, cfg.store_path, data / "service.lock") if p.exists())
+    print(json.dumps({
+        "mode": "metadata-only (matched text is never printed)", "root": str(root), "files_scanned": n,
+        "findings": [f.to_dict() for f in findings], "permission_issues": perms,
+        "verdict": "CLEAN" if not findings and not perms else "REVIEW_REQUIRED",
+    }, indent=2, ensure_ascii=False))
+    return EXIT_OK if not findings and not perms else EXIT_INVALID
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="osrs-ee", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -484,6 +510,10 @@ def build_parser() -> argparse.ArgumentParser:
     dr = sub.add_parser("doctor", help="component readiness on THIS machine (SIMULATED vs real stated per item)")
     dr.add_argument("--config", help="optional config.toml to check data_dir/disk/secret presence")
     dr.set_defaults(fn=cmd_doctor)
+    sc = sub.add_parser("secret-scan", help="metadata-only secret-shape scan of a tree (never prints values); exit 2 on findings")
+    sc.add_argument("path", nargs="?", default=".", help="directory or file (default: .)")
+    sc.add_argument("--config", help="also check data_dir/store/lock permissions (POSIX)")
+    sc.set_defaults(fn=cmd_secret_scan)
     return p
 
 

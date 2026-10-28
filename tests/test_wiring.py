@@ -14,8 +14,8 @@ from osrs_ee.telegram import FakeTransport, OutboundMessage
 from tests.fake_http import FakeHttpServer
 from tests.test_store import T0
 
-TOKEN = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"
-KEY = "sk-FAKE-KEY-0123456789abcdefghijklmnopqrstuvwxyz"
+TOKEN = "123456789:FAKE_TOKEN_abcdefghijklmnopqrstuvwxyz0123"  # secret-scan: allow (synthetic canary)
+KEY = "sk-FAKE-KEY-0123456789abcdefghijklmnopqrstuvwxyz"  # secret-scan: allow (synthetic canary)
 
 
 def cfg(**over) -> c.ServiceConfig:

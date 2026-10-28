@@ -51,7 +51,7 @@ class Redaction(unittest.TestCase):
 
     def test_secret_shapes_rejected(self):
         r = redactor()
-        for bad in ("token ghp_" + "A" * 36, "bot 123456789:" + "x" * 35, "password: hunter2222"):
+        for bad in ("token ghp_" + "A" * 36, "bot 123456789:" + "x" * 35, "password: hunter2222"):  # secret-scan: allow (synthetic canary)
             self.assertIsNotNone(r.scan(bad), bad)
 
     def test_account_id_replaced_by_alias(self):

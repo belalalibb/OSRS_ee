@@ -152,7 +152,7 @@ class RecordReplay(StoreCase):
     def test_secret_shaped_intent_param_is_withheld(self):
         w = TraceWriter(self.trace, self.red).open(now=T0)
         rec = RecordingAdapter(FakeAdapter(obs_at()).script(None), w)
-        intent = self.intent(params={"item_id": 1, "quantity": 1, "noted": False, "note": "password: hunter2hunter2"})
+        intent = self.intent(params={"item_id": 1, "quantity": 1, "noted": False, "note": "password: hunter2hunter2"})  # secret-scan: allow (synthetic canary)
         with self.assertRaises(RedactionError):
             rec.dispatch(intent, deadline=T0, now=T0)
         w.close()
