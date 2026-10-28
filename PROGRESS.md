@@ -1,17 +1,17 @@
 # نقطة الاستئناف — OSRS_ee
 
-الحالة: PUBLISHED_TO_BRANCH / PR_OPEN / LOCAL_AHEAD. `genspark_ai_developer` على GitHub = `6552b84`؛ محليًا/في آخر حزمة: `6552b84` → … → `2763c2e` (S07b-local) → `5c4716c` (packaging) → `d47eebb` (S04b-prep) → `1ff58e7` (بوابة الجاهزية) → `e68c75e` (ProcessSupervisor) → `fd3a4d3`/`7f40c1d`/`b32222b` (WIRE-01 + CLI) → `f6d84c4` (tests/target) → `95533ab` (test_failures) → `1daf93a` (إصلاح clean-env) → `e42f52e` (RUNBOOK) → **هذا الـcommit (DOC-09)** — كلها **غير مدفوعة بعد** (التفويض مؤجل للنهاية بقرار المالك)؛ `main` = `3740096f` (PR #1 بانتظار المالك). **282 اختبارًا offline تمر + 8 اختبارات هدف تُتخطى بصدق**؛ متحقق من استنساخ نظيف. الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا اتصال حي بـTelegram/AI، لا Web deployment.
+الحالة: PUBLISHED_TO_BRANCH / PR_OPEN / LOCAL_AHEAD. `genspark_ai_developer` على GitHub = `1bad8b4` (2026-10-28)؛ محليًا/في آخر حزمة: `6552b84` → … → `2763c2e` (S07b-local) → `5c4716c` (packaging) → `d47eebb` (S04b-prep) → `1ff58e7` (بوابة الجاهزية) → `e68c75e` (ProcessSupervisor) → `fd3a4d3`/`7f40c1d`/`b32222b` (WIRE-01 + CLI) → `f6d84c4` (tests/target) → `95533ab` (test_failures) → `1daf93a` (إصلاح clean-env) → `e42f52e` (RUNBOOK) → **هذا الـcommit (DOC-09)** — كلها **غير مدفوعة بعد** (التفويض مؤجل للنهاية بقرار المالك)؛ `main` = `3740096f` (PR #1 بانتظار المالك). **282 اختبارًا offline تمر + 8 اختبارات هدف تُتخطى بصدق**؛ متحقق من استنساخ نظيف. الوجهة النهائية الوحيدة https://github.com/belalalibb/OSRS_ee.git، الفرع `main`. لا تطبيق شُغّل على حسابات حقيقية، لا اتصال حي بـTelegram/AI، لا Web deployment.
 
 ## مصدر الاستئناف الأساسي (2026-10-23 فصاعدًا)
 
-`git clone https://github.com/belalalibb/OSRS_ee.git && git checkout genspark_ai_developer` → `pip install -e ".[dev]"` → `python -m pytest` (توقع 282 passed, 8 skipped عند آخر حزمة؛ الـremote عند `6552b84` يعطي 156 حتى يُدفع التحديث). PR: https://github.com/belalalibb/OSRS_ee/pull/1. **قاعدة الترتيب:** قارن SHA الـremote بـSHA آخر حزمة أدناه؛ الأحدث هو مصدر الاستئناف، ولا تستبدل الأحدث بالأقدم.
+`git clone https://github.com/belalalibb/OSRS_ee.git && git checkout genspark_ai_developer` → `pip install -e ".[dev]"` → `python -m pytest` (توقع 282 passed, 8 skipped عند آخر حزمة؛ الـremote الآن `1bad8b4` = 309 passed, 8 skipped). PR: https://github.com/belalalibb/OSRS_ee/pull/1. **قاعدة الترتيب:** قارن SHA الـremote بـSHA آخر حزمة أدناه؛ الأحدث هو مصدر الاستئناف، ولا تستبدل الأحدث بالأقدم.
 
 ## آخر حزمة استعادة (احتياطي)
 
 | الحقل | القيمة |
 |---|---|
 | الرابط | https://www.genspark.ai/api/files/s/BCW04Ly7 (bundle sec04، SHA-256 `9d816ec9b3463aa061b264dfe677c0563709124914192796a4004683295e12bb`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
-| commit | `482a893` على `genspark_ai_developer` (309 passed, 8 skipped؛ remote GitHub عند `0ecf40c` = آخر دفعة مفوّضة؛ الـcommits `01d75d2 ebfa9d4 48619b2 28ab1ab d63825d 07f8886 2f6e35c 482a893` محلية/في الحزم فقط حتى تفويض نهاية الدفعة) |
+| commit | `482a893` على `genspark_ai_developer` (309 passed, 8 skipped؛ remote GitHub = `1bad8b4` بعد دفع سريع التقدم في 2026-10-28؛ PR #1 محدَّث بلا دمج؛ `main` = `3740096f`) |
 | استعادة بديلة | `git fetch origin genspark_ai_developer` يعطي `0ecf40c` بلا تفويض (قراءة عامة)، ثم `git fetch <bundle> refs/heads/genspark_ai_developer:refs/heads/genspark_ai_developer` لما بعده |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |

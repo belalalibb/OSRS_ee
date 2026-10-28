@@ -26,7 +26,7 @@
 | DOC-06 | DONE_LOCAL | `docs/RUNBOOK.md`: تثبيت/تشغيل، الأنماط A (نواة) / B (محاكاة) / C (متكامل غير منفذ)، جدول REAL/FAKE/MISSING، انتقالات A→B→C (commit `dc51bea`) |
 | DOC-07 | DONE_LOCAL | `docs/ROADMAP.md`: خطة مرتبة بالاعتماديات D0→S04a→S04b→S04c→S05 + S06b/S07b/S08b مع ملفات/اختبارات/معايير قبول لكل مرحلة (commit `dc51bea`) |
 | DOC-08 | DONE_LOCAL | تصحيح التناقضات (NOT_PUSHED/«OAuth غير متاح»/156) في README/PROGRESS/TASKS/FOUNDATION/OUT_OF_SANDBOX/RESUME_PROTOCOL 0.4؛ متطلبات جهاز الهدف والاختبارات التشغيلية المرتبة في OUT_OF_SANDBOX §3 |
-| PUSH-02 | BLOCKED_AUTH | دفع `7a63ebc`/`dc51bea`/تصحيح الوثائق إلى `genspark_ai_developer` وتحديث وصف PR #1؛ يتم تلقائيًا عند أول جلسة بتفويض ناجح (fetch → تأكيد `6552b84` سلف → push عادي → تحقق SHA) |
+| PUSH-02 | DONE | 2026-10-28 دُفع `genspark_ai_developer` بسرعة التقدم `0ecf40c..1bad8b4` (9 commits، بلا force) وتحقق `ls-remote` = `1bad8b4`؛ وُحدّث عنوان/وصف PR #1 (309/8، SUP-03/04/05، SEC-03/04، المقارنة) **بلا دمج**؛ `main` = `3740096f` لم يُمس |
 | S04a | DONE_LOCAL | `osrs_ee/adapters/` (RecordingAdapter بتنقيح fail-closed، ReplayAdapter صارم، conformance C1–C7) + `target_check` (لا يشغّل شيئًا) + CLI target-check/conformance/replay؛ 20 اختبارًا؛ المجموع 181 (evidence/s04a_tests.md) |
 | S04c-local | DONE_LOCAL | `config.py` (TOML fail-closed، مراجع فقط، auth_mode مقفول) + `supervisor.py` (Protocol + FakeSupervisor) + `service.py` (قبول→بدء→إيقاف منظم؛ UNKNOWN/لا exit proof→RECOVERY_REQUIRED؛ إعادة تشغيل محدودة→CIRCUIT_OPEN؛ ضغط→إيقاف؛ تنبيهات منقّحة) + CLI `service` (simulated فقط) + `config.example.toml`؛ 22 اختبارًا؛ المجموع 203 (evidence/s04c_local_tests.md)؛ المشرف الحقيقي يبقى على الجهاز |
 | S06b-local | DONE_LOCAL | `osrs_ee/transports/` TelegramHttpTransport (urllib، `ref:env:` → canary، allowlist، 429/5xx/4xx) + TelegramPoller/parse_update صارم؛ `tests/fake_http.py`؛ 14 اختبارًا؛ المجموع 217 (evidence/s06b_local_tests.md)؛ الربط بالخدمة وT02/T03 على دردشة حقيقية يحتاجان مفتاح اختبار من المالك |
@@ -61,7 +61,7 @@
 | تشغيل T02/T03/T35 الحية | **لا** | تحتاج token/دردشة/مفتاح من المالك؛ الشبكة محجوبة بالتصميم؛ الكود والاختبارات جاهزة للتشغيل بأمر واحد (RUNBOOK §4) |
 | V01–V08 | **لا** | تحتاج source revisions مثبتة وجهاز تحقق |
 | daemon طويل العمر بلا `--max-ticks` | **لا (مرفوض عمدًا)** | قرار تصميم: لا تشغيل غير محدود قبل S04b على الهدف وإذن S05 |
-| PUSH-02 / تحديث PR #1 | **تم مرة** (`0ecf40c` على GitHub) ثم **لا** | التفويض يُطلب مرة واحدة فقط في نهاية هذه الدفعة لدفع الـcommits الجديدة (01d75d2…) وتحديث PR #1 بلا دمج |
+| PUSH-02 / تحديث PR #1 | **تم** (`1bad8b4` على GitHub، PR #1 محدَّث بلا دمج) | التفويض يُطلب مرة واحدة فقط في نهاية هذه الدفعة لدفع الـcommits الجديدة (01d75d2…) وتحديث PR #1 بلا دمج |
 | تحسينات محلية إضافية (مزيد من الاختبارات، إعادة هيكلة) | ممكنة لكن **غير مطلوبة** | التغطية الحالية تغطي كل مسارات الفشل المحددة في التوجيه؛ إضافة كود بلا هدف حقيقي تزيد السطح دون دليل — تُؤجَّل إلى ما بعد قرارات المالك |
 النتيجة: **لم يتبقَّ عمل قابل للتنفيذ محليًا بدليل**؛ كل المتبقي مُدرج أعلاه بسببه.
 
