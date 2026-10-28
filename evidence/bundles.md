@@ -4,6 +4,13 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-28 | `07f8886` (genspark_ai_developer) | `fee2a63852b54ad0f16f9b8da29a7c868c5a7344c584810ad642dc4f9d5b0e76` | https://www.genspark.ai/api/files/s/qmCUULRk | docs3: RUNBOOK/README لـSUP-03/04/05+SEC-03؛ 307/8 |
+| 2026-10-28 | `d63825d` (genspark_ai_developer) | `80b6e5639a72de3330fed198e3be594a822706816a3985e4326214896ca22fec` | https://www.genspark.ai/api/files/s/Gh0MsVNt | cmp1: docs/ENGINE_DOCS_COMPARISON.md؛ 307/8؛ استُعيدت بنجاح بعد المسح 39 |
+| 2026-10-28 | `28ab1ab` (genspark_ai_developer) | `8c1cc6e752f10d736470c301478be17c84365706e005dc10dfa4c227c8ebeffa` | https://www.genspark.ai/api/files/s/rNSiKy9R | sup05: حد سجل الابن (5 اختبارات)؛ 307/8 (نسخة أولى e8ef2bd ضاعت بالمسح 38 قبل الرفع وأُعيد تنفيذها) |
+| 2026-10-28 | `48619b2` (genspark_ai_developer) | `89b93ed44b421139650032f6cb1204036ed0635c2db2fd0c7c5e5bf79f9475a9` | https://www.genspark.ai/api/files/s/MgRBx9Ud | sec03: secret-scan + __main__ (8)؛ 302/8؛ استُعيدت بنجاح بعد المسح 38 |
+| 2026-10-28 | `ebfa9d4` (genspark_ai_developer) | `c290a42213b1b98bb3030f4d9b236e65e4da64c288480f4908221a52cbbfdf87` | https://www.genspark.ai/api/files/s/q3FcOvO8 | sup04: ServiceLock + reconcile_orphaned_sessions (9)؛ 294/8؛ استُعيدت بنجاح بعد المسح 37 |
+| 2026-10-28 | `01d75d2` (genspark_ai_developer) | `93f8d1e2d5ef750f9e262a85040dfa7ab7316c6f24f294e8a6490299230e7afa` | https://www.genspark.ai/api/files/s/CgwdR3PB | sup03: killpg لمجموعة العملية (3)؛ 285/8 |
+| 2026-10-24 | `0ecf40c` (genspark_ai_developer) | `d2e2828f3ecbaddb662048e62e007b6755d5c3a1cdb50c947669f8742c94585f` | https://www.genspark.ai/api/files/s/O6MSadvi | final1: تسجيل docs2؛ 282/8؛ **مدفوع إلى GitHub** (PUSH-02 بتفويض المالك) وPR #1 محدّث؛ المسحات 34–36 استُعيدت منه عبر `git fetch origin` |
 | 2026-10-24 20:40 | `ad1bfe4` (genspark_ai_developer) | `5d0fd320824210925bda21f18c914c3a4c059d779b55a3611a851317fd8abb1d` | https://www.genspark.ai/api/files/s/U0swtUwT | docs2: DOC-09 (TASKS/OUT_OF_SANDBOX ADR-007/008/ROADMAP/README/PROGRESS/evidence)؛ 282/8؛ آخر حزمة قبل التقرير النهائي |
 | 2026-10-24 20:25 | `e42f52e` (genspark_ai_developer) | `8c7cd65322494db43b0de5720eb6635df87e63ae9e6ccd43295db50b684379ee` | https://www.genspark.ai/api/files/s/SJ2A2ZQ6 | docs1: RUNBOOK (بوابة الجاهزية/opt-in/config-check/doctor/§4 tests/target)؛ 282/8؛ بعد المسح 31 (استُعيدت clean1 بنجاح) |
 | 2026-10-24 19:50 | `1daf93a` (genspark_ai_developer) | `aeac456ed7698941a699712cbde287ac3990b729103b22ce4c591f61f2ba8596` | https://www.genspark.ai/api/files/s/SHrb8ecU | clean1: إصلاح ترتيب استيراد ssl في conftest (وُجد في venv نظيف) + evidence/clean_env؛ 282 passed, 8 skipped؛ استُعيدت بنجاح بعد المسح 31 |

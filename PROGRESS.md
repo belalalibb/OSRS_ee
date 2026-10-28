@@ -10,8 +10,9 @@
 
 | الحقل | القيمة |
 |---|---|
-| الرابط | https://www.genspark.ai/api/files/s/U0swtUwT (bundle docs2، SHA-256 `5d0fd320824210925bda21f18c914c3a4c059d779b55a3611a851317fd8abb1d`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
-| commit | `ad1bfe4` على `genspark_ai_developer` (282 passed, 8 skipped؛ remote GitHub ما زال عند `6552b84`؛ التفويض لا يُطلب أثناء التطوير بقرار المالك) |
+| الرابط | https://www.genspark.ai/api/files/s/qmCUULRk (bundle docs3، SHA-256 `fee2a63852b54ad0f16f9b8da29a7c868c5a7344c584810ad642dc4f9d5b0e76`)؛ الصف الأعلى في evidence/bundles.md هو الأحدث دائمًا (قد يتقدم على هذا الجدول بحزمة توثيقية واحدة) |
+| commit | `07f8886` على `genspark_ai_developer` (307 passed, 8 skipped؛ remote GitHub عند `0ecf40c` = آخر دفعة مفوّضة؛ الـcommits `01d75d2 ebfa9d4 48619b2 28ab1ab d63825d 07f8886` محلية/في الحزم فقط حتى تفويض نهاية الدفعة) |
+| استعادة بديلة | `git fetch origin genspark_ai_developer` يعطي `0ecf40c` بلا تفويض (قراءة عامة)، ثم `git fetch <bundle> refs/heads/genspark_ai_developer:refs/heads/genspark_ai_developer` لما بعده |
 | main | `3740096f31d4977b5d5705c4dd7208166208908c` (الأساس المعتمد) |
 | احتياطي | حزمة التسليم الأصلية https://www.genspark.ai/api/files/s/Qmm5YBwM (`a973b8ec…`) |
 
