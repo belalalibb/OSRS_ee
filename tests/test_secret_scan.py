@@ -107,3 +107,60 @@ class MainModule(unittest.TestCase):
         self.assertTrue(r.stdout.strip())
         r2 = subprocess.run([sys.executable, "-m", "osrs_ee"], capture_output=True, text=True, env=env, timeout=60)
         self.assertEqual(r2.returncode, 2)  # argparse: subcommand required
+
+
+@unittest.skipUnless(os.name == "posix", "POSIX permission bits")
+class PrivateArtifacts(unittest.TestCase):
+    """SEC-04: our own artifacts must pass our own `secret-scan --config` under a permissive umask."""
+
+    def _cfg(self, d: Path) -> Path:
+        text = (ROOT / "config.example.toml").read_text()
+        text = text.replace('data_dir = "data"', f'data_dir = "{d}/data"')
+        cfg = Path(d) / "c.toml"
+        cfg.write_text(text, encoding="utf-8")
+        return cfg
+
+    def _mode(self, p: Path) -> int:
+        import stat
+        return stat.S_IMODE(p.stat().st_mode)
+
+    def test_store_init_and_open_narrow_world_readable_store(self):
+        old = os.umask(0o022)
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                db = Path(d) / "deep" / "store.sqlite"
+                code, _, _ = run("store", "init", str(db))
+                self.assertEqual(code, 0)
+                self.assertEqual(self._mode(db.parent), 0o700)
+                self.assertEqual(self._mode(db), 0o600)
+                # pre-existing wide store is narrowed on open()
+                db.chmod(0o644)
+                from datetime import datetime, timezone
+                from osrs_ee.store import Store
+                with Store.open(db, now=datetime.now(timezone.utc)):
+                    pass
+                self.assertEqual(self._mode(db), 0o600)
+                for suffix in ("-wal", "-shm"):
+                    p = Path(str(db) + suffix)
+                    if p.exists():
+                        self.assertEqual(self._mode(p), 0o600, suffix)
+        finally:
+            os.umask(old)
+
+    def test_service_creates_private_data_dir_lock_and_store(self):
+        old = os.umask(0o022)
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cfg = self._cfg(Path(d))
+                code, out, err = run("service", "--config", str(cfg), "--max-ticks", "2", "--fast")
+                self.assertEqual(code, 0, err)
+                data = Path(d) / "data"
+                self.assertEqual(self._mode(data), 0o700)
+                self.assertEqual(self._mode(data / "service.lock"), 0o600)
+                self.assertEqual(self._mode(data / "store.sqlite"), 0o600)
+                for f in data.glob("*.sqlite*"):
+                    self.assertEqual(self._mode(f), 0o600, f.name)
+                code, out, _ = run("secret-scan", d, "--config", str(cfg))
+                self.assertEqual(json.loads(out)["permission_issues"], [])
+        finally:
+            os.umask(old)

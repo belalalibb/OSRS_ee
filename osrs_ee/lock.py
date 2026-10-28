@@ -69,6 +69,11 @@ class ServiceLock:
         fh.truncate()
         fh.write(f"{os.getpid()}\n")
         fh.flush()
+        if os.name == "posix":  # SEC-04: lock file is owner-only (holds our pid; lives in private data_dir)
+            try:
+                os.chmod(self.path, 0o600)
+            except OSError:
+                pass
         self._fh = fh
         return self
 

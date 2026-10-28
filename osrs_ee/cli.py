@@ -41,6 +41,24 @@ from osrs_ee import contracts
 EXIT_OK, EXIT_INVALID, EXIT_ERROR = 0, 2, 1
 
 
+def _private_dir(d: Path) -> Path:
+    """SEC-04: create ``d`` (parents too) and keep it owner-only (0700) on POSIX.
+
+    data_dir holds the SQLite store, service.lock and supervisor logs; a 0755
+    umask default would expose all of it to other local users. Best-effort.
+    """
+    import os
+    import stat
+    d.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix":
+        try:
+            if stat.S_IMODE(d.stat().st_mode) & 0o077:
+                os.chmod(d, 0o700)
+        except OSError:
+            pass
+    return d
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -88,7 +106,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_store_init(args: argparse.Namespace) -> int:
     from osrs_ee.store import Store
     path = Path(args.path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _private_dir(path.parent)
     with Store.open(path, now=_now()) as s:
         affected = s.recover(now=_now())
         print(json.dumps({"path": str(path), "integrity_ok": s.integrity_ok(), "recovered_accounts": affected}, ensure_ascii=False))
@@ -342,7 +360,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             add("config", True, f"{args.config} valid; target.mode={cfg.target.mode}")
             data_dir = Path(cfg.target.data_dir)
             try:
-                data_dir.mkdir(parents=True, exist_ok=True)
+                _private_dir(data_dir)
                 probe = data_dir / ".doctor_write_probe"
                 probe.write_text("ok"); probe.unlink()
                 add("data_dir writable", True, str(data_dir))
@@ -398,7 +416,7 @@ def cmd_service(args: argparse.Namespace) -> int:
         print("REFUSED: simulated service requires a bound: pass --max-ticks or set [worker].max_ticks (no unattended runs).",
               file=sys.stderr)
         return EXIT_INVALID
-    Path(cfg.target.data_dir).mkdir(parents=True, exist_ok=True)
+    _private_dir(Path(cfg.target.data_dir))
     from osrs_ee.lock import LockHeld, ServiceLock
     lock = ServiceLock(cfg.target.data_dir)
     try:

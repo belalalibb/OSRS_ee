@@ -35,6 +35,29 @@ from . import canonical, contracts
 from .guards import parse_utc
 
 SCHEMA_VERSION = "1"
+
+
+def _restrict_private_file(path: str | Path) -> None:
+    """SEC-04: keep the store (and its -wal/-shm companions) owner-only on POSIX.
+
+    SQLite creates files with the process umask (often 0644). The store holds
+    account state and command history, so narrow to 0600 when it is wider.
+    Best-effort: permission errors are ignored (never block the service).
+    """
+    import os
+    import stat
+    if os.name != "posix":
+        return
+    base = Path(path)
+    for p in (base, Path(str(base) + "-wal"), Path(str(base) + "-shm")):
+        try:
+            mode = stat.S_IMODE(p.stat().st_mode)
+            if mode & 0o077:
+                os.chmod(p, 0o600)
+        except OSError:
+            continue
+
+
 _SCHEMA_SQL = "\n".join(
     line for line in (Path(__file__).resolve().parent / "store_schema.sql").read_text(encoding="utf-8").splitlines()
     if not line.lstrip().startswith("--")
@@ -150,8 +173,10 @@ class Store:
     @classmethod
     def open(cls, path: str | Path, *, now: datetime) -> "Store":
         conn = sqlite3.connect(str(path), isolation_level=None, timeout=5.0)
+        _restrict_private_file(path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
+        _restrict_private_file(path)  # -wal/-shm exist only after WAL is enabled
         conn.execute("PRAGMA synchronous=FULL")
         conn.execute("PRAGMA foreign_keys=ON")
         conn.execute("PRAGMA busy_timeout=5000")
