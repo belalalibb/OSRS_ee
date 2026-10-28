@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "event_id": "evt_demo001",
+  "command_id": "cmd_demo001",
+  "session_id": "sess_demo001",
+  "session_epoch": 3,
+  "state_version": 8,
+  "transport_status": "ACKNOWLEDGED",
+  "effect_status": "VERIFIED",
+  "reason_code": "NONE",
+  "evidence_refs": [],
+  "occurred_at": "2026-10-23T19:00:05Z"
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "command_id": "cmd_demo001",
+  "account_id": "acc_demo001",
+  "session_id": "sess_demo001",
+  "client_instance_id": "client_demo001",
+  "session_epoch": 3,
+  "lease_id": "lease_demo001",
+  "expected_state_version": 7,
+  "operation": "BANK_WITHDRAW",
+  "params": {
+    "item_id": 1511,
+    "quantity": 10,
+    "noted": false
+  },
+  "precondition_ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "postcondition_ref": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "issued_at": "2026-10-23T19:00:01Z",
+  "expires_at": "2026-10-23T19:00:31Z",
+  "policy_version": 1,
+  "config_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

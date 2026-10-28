@@ -1,0 +1,63 @@
+# OSRS_ee — example service configuration (S04c-local).
+# Simulated mode only: no client is launched, no account is used, no network.
+# NEVER put credentials or tokens here. Use ref:... references only.
+
+config_hash = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+policy_version = 1
+
+[target]
+mode = "simulated"          # "device" requires client_path and is NOT runnable until ADR-007
+data_dir = "data"
+display_required = true
+
+[worker]
+observation_max_age_seconds = 10
+dispatch_timeout_seconds = 30
+max_queue = 16
+tick_seconds = 1.0
+# max_ticks = 100           # optional bound for demos/tests
+
+[health]
+freeze_after_seconds = 30
+restart_budget = 3
+restart_window_seconds = 900
+ready_timeout_seconds = 60   # STARTING -> RUNNING needs supervisor readiness proof within this window
+
+[resources]
+rss_limit_bytes = 2147483648
+disk_reserve_bytes = 1073741824
+fd_limit = 2048
+cpu_limit_percent = 90.0
+snapshot_max_age_seconds = 30
+
+[network]
+required_route = "DIRECT"
+allow_direct_fallback = false
+egress_allowlist = []
+
+[telegram]
+enabled = false
+# bot_token_ref = "ref:vault:telegram_bot"   # reference only, never the token
+chat_ids = []
+outbox_capacity = 32
+# base_url = "https://api.telegram.org"      # loopback http:// only for fake-server tests
+# allowed_hosts = ["api.telegram.org"]
+# timeout_seconds = 10.0
+# poll_timeout_seconds = 0                   # 0 = short poll; up to 50 for long poll
+# approver_user_ids = []                     # Telegram user ids allowed to approve (owner decides)
+
+[ai]
+enabled = false # ai: advisory only; true requires api_key_ref (ref:env:NAME) — never the key
+# api_key_ref = "ref:env:OSRS_EE_AI_KEY"
+# base_url = "https://api.openai.com"
+# model = "gpt-4o-mini"
+# allowed_hosts = ["api.openai.com"]
+# timeout_seconds = 15.0
+max_calls = 20              # global budget per service run
+max_bytes = 200000
+
+[account]
+account_id = "acc_local001"
+alias = "alias:local"
+credential_ref = "ref:vault:acc_local001"
+auth_mode = "UNKNOWN"       # locked until ADR-008 (owner decision)

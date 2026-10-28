@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osrs-ee.local/schemas/command_intent.schema.json",
+  "title": "CommandIntent v1.0",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version","command_id","account_id","session_id","client_instance_id","session_epoch","lease_id","expected_state_version","operation","params","precondition_ref","postcondition_ref","issued_at","expires_at","policy_version","config_hash"],
+  "properties": {
+    "schema_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/schema_version"},
+    "command_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "account_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "session_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"},
+    "client_instance_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"}, "session_epoch": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/epoch"}, "lease_id": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/opaque_id"},
+    "expected_state_version": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/state_version"}, "operation": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/operation"}, "params": {"type": "object"},
+    "precondition_ref": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/sha256_hex"}, "postcondition_ref": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/sha256_hex"},
+    "issued_at": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/rfc3339_utc"}, "expires_at": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/rfc3339_utc"},
+    "policy_version": {"type": "integer", "minimum": 1}, "config_hash": {"$ref": "https://osrs-ee.local/schemas/common.schema.json#/$defs/sha256_hex"}
+  },
+  "allOf": [
+    {"if": {"properties": {"operation": {"enum": ["NOOP","OBSERVE","BANK_OPEN","BANK_CLOSE","BANK_DEPOSIT_INVENTORY","LOGOUT"]}}},
+     "then": {"properties": {"params": {"type": "object", "additionalProperties": false, "maxProperties": 0}}}},
+    {"if": {"properties": {"operation": {"const": "BANK_WITHDRAW"}}},
+     "then": {"properties": {"params": {"type": "object", "additionalProperties": false, "required": ["item_id","quantity","noted"],
+       "properties": {"item_id": {"type": "integer", "minimum": 0, "maximum": 65535}, "quantity": {"type": "integer", "minimum": 1, "maximum": 2147483647}, "noted": {"type": "boolean"}}}}}},
+    {"if": {"properties": {"operation": {"const": "WALK_TO"}}},
+     "then": {"properties": {"params": {"type": "object", "additionalProperties": false, "required": ["x","y","plane"],
+       "properties": {"x": {"type": "integer", "minimum": 0, "maximum": 16383}, "y": {"type": "integer", "minimum": 0, "maximum": 16383}, "plane": {"type": "integer", "minimum": 0, "maximum": 3}}}}}}
+  ]
+}

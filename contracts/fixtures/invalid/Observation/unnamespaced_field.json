@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "observation_id": "obs_demo001",
+  "account_id": "acc_demo001",
+  "client_instance_id": "client_demo001",
+  "session_epoch": 3,
+  "observed_at": "2026-10-23T19:00:00Z",
+  "state_version": 7,
+  "consistency": "BEST_EFFORT",
+  "fields": {
+    "bank": {
+      "quality": "KNOWN",
+      "source": "x",
+      "observed_at": "2026-10-23T19:00:00Z",
+      "value": true
+    }
+  }
+}
