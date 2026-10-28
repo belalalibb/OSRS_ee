@@ -49,6 +49,7 @@
 | SUP-05 | DONE_LOCAL | `28ab1ab` `ProcessSpec.log_max_bytes` (64 MiB افتراضيًا، [64 KiB, 2 GiB]): دوران إلى `.1` عند البدء + اقتطاع في المكان أثناء `tick()` (الابن يكتب O_APPEND فإعادة التسمية لا تحدّه) + `log_bytes` في القياس؛ 5 اختبارات بابن ثرثار |
 | PKG-02 | DONE_LOCAL | wheel غير قابل للتحرير: `python -m build --wheel` → تثبيت في venv نظيف خارج المستودع → `osrs-ee`/`python -m osrs_ee`/`store_schema.sql` داخل الـwheel/`config-check`/`service --max-ticks 3` (READY→RESTING)/`secret-scan` كلها تعمل (2026-10-28) |
 | DOC-10 | DONE_LOCAL | `07f8886` RUNBOOK (§2.5 القفل/الأيتام، §2.5.1 secret-scan، §2.5.2 صفوف جديدة، §6 أعراض جديدة) + README (307/8، secret-scan، python -m، رابط المقارنة) + هذا الـcommit TASKS/PROGRESS/bundles |
+| SEC-04 | DONE_LOCAL | `482a893` صلاحيات مالك فقط (POSIX): `cli._private_dir()` → `data_dir` 0700 عند `store init`/`doctor`/`service`؛ `Store.open()` يضيّق المخزن و`-wal`/`-shm` إلى 0600؛ `ServiceLock.acquire()` يضبط `service.lock` 0600؛ اكتُشفت بفحص «التسلم من مطوّر آخر» حين أبلغ `secret-scan --config` عن 0755/0644؛ اختباران تحت umask 022؛ 309/8 |
 | S09 | DEFERRED | الاقتصاد/البيع/النقل بتفويض مستقل |
 
 كل T01–T35 NOT_RUN على OSRS_ee حتى يُنفَّذ اختبار الهدف بدليل؛ V01–V08 REPORTED_UNVERIFIED؛ الاختبارات المحلية (307 تمر + 8 تُتخطى) تغطي منطق القرار والمكوّنات المحلية ضد عمليات/خوادم وهمية فقط ولا تُعد قبولًا للنظام — المصفوفة في docs/OUT_OF_SANDBOX.md §4.

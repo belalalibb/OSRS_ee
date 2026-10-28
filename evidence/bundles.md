@@ -4,6 +4,8 @@
 
 | التاريخ UTC | commit (الفرع العامل) | SHA-256 للحزمة | الرابط | ملاحظة |
 |---|---|---|---|---|
+| 2026-10-28 | `482a893` (genspark_ai_developer) | `9d816ec9b3463aa061b264dfe677c0563709124914192796a4004683295e12bb` | https://www.genspark.ai/api/files/s/BCW04Ly7 | sec04: صلاحيات مالك فقط لـdata_dir 0700 / store 0600 (+-wal/-shm) / service.lock 0600 (اختباران)؛ 309/8؛ أُعيد تنفيذها بعد المسح 40 |
+| 2026-10-28 | `2f6e35c` (genspark_ai_developer) | `55767a79047cdfc82645ab8cab12e8620253ac0cc2b36ccea20bf4b7b326ebd6` | https://www.genspark.ai/api/files/s/9Rndn0FF | docs4: TASKS/PROGRESS/bundles لـSUP-03..DOC-10؛ 307/8؛ نقطة الاستعادة بعد المسح 40 |
 | 2026-10-28 | `07f8886` (genspark_ai_developer) | `fee2a63852b54ad0f16f9b8da29a7c868c5a7344c584810ad642dc4f9d5b0e76` | https://www.genspark.ai/api/files/s/qmCUULRk | docs3: RUNBOOK/README لـSUP-03/04/05+SEC-03؛ 307/8 |
 | 2026-10-28 | `d63825d` (genspark_ai_developer) | `80b6e5639a72de3330fed198e3be594a822706816a3985e4326214896ca22fec` | https://www.genspark.ai/api/files/s/Gh0MsVNt | cmp1: docs/ENGINE_DOCS_COMPARISON.md؛ 307/8؛ استُعيدت بنجاح بعد المسح 39 |
 | 2026-10-28 | `28ab1ab` (genspark_ai_developer) | `8c1cc6e752f10d736470c301478be17c84365706e005dc10dfa4c227c8ebeffa` | https://www.genspark.ai/api/files/s/rNSiKy9R | sup05: حد سجل الابن (5 اختبارات)؛ 307/8 (نسخة أولى e8ef2bd ضاعت بالمسح 38 قبل الرفع وأُعيد تنفيذها) |

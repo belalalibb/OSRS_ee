@@ -98,9 +98,9 @@ osrs-ee doctor --config config.toml           # إصدارات Python/SQLite/jso
 osrs-ee store init data/store.sqlite          # تهيئة/استعادة المخزن
 osrs-ee conformance                           # C1–C7 على FakeAdapter؛ المحوّل الحقيقي يجب أن يجتازها على الهدف (tests/target)
 osrs-ee secret-scan .                         # فحص أشكال الأسرار في الشجرة: يطبع path/line/pattern/length فقط — لا يطبع القيمة أبدًا؛ exit 2 عند أي نتيجة
-osrs-ee secret-scan . --config config.toml    # + فحص صلاحيات data_dir/store/service.lock (POSIX: تحذير إن كانت مقروءة للمجموعة/الآخرين)
+osrs-ee secret-scan . --config config.toml    # + فحص صلاحيات data_dir/store/service.lock (POSIX: تحذير إن كانت مقروءة للمجموعة/الآخرين؛ SEC-04: الخدمة نفسها تنشئها 0700/0600 مهما كان umask، فالنتيجة المتوقعة permission_issues=[])
 ```
-سطر يحمل كناري اصطناعيًا موثّقًا يُستثنى بعلامة مرئية `# secret-scan: allow`. الشجرة الحالية: 144 ملفًا، 0 نتائج (اختبار انحدار `test_repository_is_clean`).
+سطر يحمل كناري اصطناعيًا موثّقًا يُستثنى بعلامة مرئية `# secret-scan: allow`. الشجرة الحالية: 145 ملفًا، 0 نتائج (اختبار انحدار `test_repository_is_clean`).
 دلالة أنواع فحوص `doctor`:
 | النوع | المعنى |
 |---|---|
@@ -115,7 +115,7 @@ osrs-ee secret-scan . --config config.toml    # + فحص صلاحيات data_dir
 |---|---|---|---|
 | محوّل قراءة loopback | `osrs_ee/adapters/loopback_readonly.py` | GET `/observe` من `http://127.0.0.1:<port>` فقط، حدود الحجم/المهلة، رفض كل `dispatch()` (`NEVER_DISPATCH`)، أخطاء صادقة في `last_error` | وجود أي نقطة قراءة على الهدف (ADR-008) |
 | مشرف عمليات عام | `osrs_ee/supervisor.py: ProcessSpec/ProcessSupervisor` | بدء عملية ابنة في session خاصة، جاهزية عبر ready_file، tick من ملف، **SIGTERM→مهلة→SIGKILL على مجموعة العملية كاملة (`killpg`؛ الحفيد يُقتل — SUP-03)**، دليل خروج، قياس /proc، **سجل الابن محدود بـ`log_max_bytes` (افتراضي 64 MiB: دوران إلى `.1` عند البدء + اقتطاع في المكان أثناء التشغيل — SUP-05)** — مُختبر بعملية python فقط على Linux | تشغيل JVM/GUI فعلي (ADR-007)؛ أي سلوك على Windows (مجموعات العمليات/`taskkill`) |
-| قفل الخدمة | `osrs_ee/lock.py: ServiceLock` | `flock` حصري غير حاجب على `data_dir/service.lock`؛ رفض الازدواج؛ تحرير تلقائي عند موت الحامل؛ ملف pid للتشخيص فقط | فرع `msvcrt.locking` على Windows (غير مُختبر هنا) |
+| قفل الخدمة | `osrs_ee/lock.py: ServiceLock` | `flock` حصري غير حاجب على `data_dir/service.lock`؛ رفض الازدواج؛ تحرير تلقائي عند موت الحامل؛ ملف pid للتشخيص فقط؛ الملف 0600 و`data_dir` 0700 والمخزن 0600 مع `-wal`/`-shm` (SEC-04، POSIX فقط، best-effort) | فرع `msvcrt.locking` على Windows (غير مُختبر هنا) |
 | فحص أسرار | `osrs_ee/secret_scan.py` | نتائج وصفية فقط، استثناء `ref:`/placeholders، تخطّي .git/الثنائيات، فحص صلاحيات POSIX | أن غياب النتائج يعني غياب الأسرار (الفحص بالأشكال فقط) |
 | قياس موارد | `osrs_ee/measure.py` | RSS/FD/قرص/CPU من `/proc` على Linux | OS الهدف إن لم يكن Linux مع /proc |
 | سياسة egress | `osrs_ee/egress.py` | allowlist `host:port[:purpose]`، loopback مسموح افتراضيًا، `guarded_opener` يرفع `EgressDenied` قبل `connect()`، جرد كل قرار | أن النظام الحقيقي لا يملك مسارًا آخر للشبكة خارج هذا الفاتح |
@@ -201,4 +201,5 @@ OSRS_EE_ALLOW_NETWORK=1 OSRS_EE_TG_TOKEN=... OSRS_EE_TG_CHAT_ID=... python -m py
 | `REFUSED: service lock … is held by another instance (pid N)` | خدمة أخرى تعمل على نفس `data_dir` | أوقفها أولًا؛ لا تحذف `service.lock` يدويًا (القفل بالنواة لا بالملف؛ ملف pid قديم بلا حامل لا يمنع البدء) |
 | `orphaned_sessions_reconciled` غير فارغ و`state_before=RECOVERY_REQUIRED` | التشغيل السابق مات دون إيقاف منظم (SIGKILL/كهرباء) | مقصود؛ راجع `store show` وسجل العملية؛ تسوية يدوية RECONCILING → READY |
 | `[osrs_ee] log truncated …` في سجل الابن | الابن تجاوز `log_max_bytes` | مقصود؛ ارفع الحد في `ProcessSpec` أو قلّل ثرثرة العميل؛ النسخة السابقة في `<log>.1` إن دارت عند البدء |
+| `secret-scan --config` يبلّغ `permission_issues` على `data_dir`/`store.sqlite`/`service.lock` | أُنشئت الملفات بأداة خارجية أو بإصدار أقدم من `482a893` | شغّل `osrs-ee store init <path>` أو `service` مرة؛ يضيّقها تلقائيًا (أو `chmod 700 data_dir && chmod 600 data_dir/*`)؛ على Windows الفحص لا ينطبق |
 | `secret-scan` exit 2 | شكل سري أو صلاحيات واسعة | افحص السطر المُشار إليه؛ إن كان كناري اصطناعيًا موثّقًا أضف `# secret-scan: allow`؛ أصلح الصلاحيات بـ`chmod 600/700` |
