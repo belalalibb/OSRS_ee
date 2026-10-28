@@ -113,6 +113,13 @@ class ProcessSpec:
     ready_file: Optional[str] = None
     stop_grace_seconds: float = 5.0
     env: Optional[dict] = None
+    # Bound for the child's log sink (SUP-05). A chatty/crash-looping client must not
+    # fill the disk: at start an existing log >= quota is rotated to ``<log>.1`` (one
+    # backup); while running, ``tick()`` truncates the live file in place when it
+    # exceeds the quota (the child writes with O_APPEND, so truncation is safe and
+    # rename-rotation would NOT bound the file the child keeps writing to).
+    # Default 64 MiB; allowed [64 KiB, 2 GiB]. Worst case on disk: 2 x quota per child.
+    log_max_bytes: int = 64 * 1024 * 1024
 
     def __post_init__(self) -> None:
         import os
@@ -125,6 +132,8 @@ class ProcessSpec:
             raise ValueError("stop_grace_seconds must be within [0.1, 300]")
         if self.cwd is not None and not os.path.isdir(self.cwd):
             raise ValueError("cwd must be an existing directory")
+        if not isinstance(self.log_max_bytes, int) or not (64 * 1024 <= self.log_max_bytes <= 2 * 1024 ** 3):
+            raise ValueError("log_max_bytes must be an int within [64 KiB, 2 GiB]")
 
 
 class ProcessSupervisor:
@@ -160,6 +169,8 @@ class ProcessSupervisor:
         self.stop_requested = False
         self.last_exit_code: Optional[int] = None
         self.last_stop_method: Optional[str] = None   # "SIGTERM" | "SIGKILL" | None
+        self.log_truncations = 0
+        self.log_rotated_at_start = False
 
     def start(self, now: datetime) -> None:
         import os
@@ -170,6 +181,7 @@ class ProcessSupervisor:
             os.unlink(self.spec.ready_file)  # stale proof from a previous run is not proof
         sink = self._subprocess.DEVNULL
         if self.log_path:
+            self._rotate_at_start()
             self._log = open(self.log_path, "ab", buffering=0)
             sink = self._log
         self._proc = self._subprocess.Popen(
@@ -187,7 +199,48 @@ class ProcessSupervisor:
             return False
         return bool(self.spec.ready_file) and os.path.exists(self.spec.ready_file)
 
+    # ---- log quota (SUP-05) ------------------------------------------------
+    def _rotate_at_start(self) -> None:
+        import os
+        try:
+            size = os.path.getsize(self.log_path)
+        except OSError:
+            return
+        if size >= self.spec.log_max_bytes:
+            os.replace(self.log_path, self.log_path + ".1")
+            self.log_rotated_at_start = True
+
+    def log_bytes(self) -> Optional[int]:
+        import os
+        if not self.log_path:
+            return None
+        try:
+            return os.path.getsize(self.log_path)
+        except OSError:
+            return None
+
+    def enforce_log_quota(self, now: datetime) -> bool:
+        """Truncate the live log in place when it exceeds the quota. Returns True if truncated."""
+        import os
+        size = self.log_bytes()
+        if size is None or size <= self.spec.log_max_bytes:
+            return False
+        try:
+            os.truncate(self.log_path, 0)
+        except OSError:
+            return False
+        self.log_truncations += 1
+        if self._log is not None:
+            try:
+                self._log.write(f"[osrs_ee] log truncated at {now.isoformat()} (quota {self.spec.log_max_bytes} bytes; "
+                                f"truncation #{self.log_truncations})\n".encode("ascii", "replace"))
+            except OSError:
+                pass
+        return True
+
     def tick(self, now: datetime) -> Optional[int]:
+        if self.log_path:
+            self.enforce_log_quota(now)
         if self._proc is None or self._proc.poll() is not None or not self.spec.ready_file:
             return None
         try:
@@ -273,7 +326,10 @@ class ProcessSupervisor:
         from osrs_ee.measure import measure_dict
         if self._proc is None or self._proc.poll() is not None:
             return None
-        return measure_dict(self._proc.pid, self.data_dir, now, cpu=self._cpu)
+        m = measure_dict(self._proc.pid, self.data_dir, now, cpu=self._cpu)
+        if m is not None and self.log_path:
+            m["log_bytes"] = self.log_bytes()
+        return m
 
     @property
     def pid(self) -> Optional[int]:

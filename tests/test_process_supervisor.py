@@ -308,3 +308,104 @@ class ProcessTree(ProcCase):
         self.assertTrue(_wait(lambda: s.exited(T0)))
         s.stop(T0)  # no ProcessLookupError leak, no signal to a reused pgid
         self.assertEqual(s.last_exit_code, 3)
+
+
+# Chatty child: writes ~1 KiB per 5 ms to stdout (the supervisor's log sink) and keeps ticking.
+CHATTY_CHILD = r"""
+import os, sys, time
+ready = sys.argv[1]
+line = ("x" * 1023 + "\n")
+t = 0
+while True:
+    t += 1
+    sys.stdout.write(line); sys.stdout.flush()
+    if t % 10 == 0:
+        tmp = ready + ".tmp"
+        with open(tmp, "w") as fh:
+            fh.write(f"{t}\n")
+        os.replace(tmp, ready)
+    time.sleep(0.005)
+"""
+
+
+class LogQuota(ProcCase):
+    """SUP-05: the child's log sink is bounded (rotate at start; truncate in place while running)."""
+
+    QUOTA = 64 * 1024  # minimum allowed
+
+    def quiet(self, log: str) -> ProcessSupervisor:
+        spec = ProcessSpec(argv=(sys.executable, "-c", CHILD, self.ready, "0", "0", "0"), ready_file=self.ready,
+                           stop_grace_seconds=1.0, log_max_bytes=self.QUOTA)
+        s = ProcessSupervisor(spec, log_path=log, data_dir=self.dir.name)
+        self.sups.append(s)
+        return s
+
+    def chatty(self, log: str) -> ProcessSupervisor:
+        spec = ProcessSpec(argv=(sys.executable, "-c", CHATTY_CHILD, self.ready), ready_file=self.ready,
+                           stop_grace_seconds=1.0, log_max_bytes=self.QUOTA)
+        s = ProcessSupervisor(spec, log_path=log, data_dir=self.dir.name)
+        self.sups.append(s)
+        return s
+
+    def test_quota_is_validated(self):
+        with self.assertRaises(ValueError):
+            ProcessSpec(argv=(sys.executable, "-c", "pass"), log_max_bytes=1024)
+        with self.assertRaises(ValueError):
+            ProcessSpec(argv=(sys.executable, "-c", "pass"), log_max_bytes=3 * 1024 ** 3)
+        with self.assertRaises(ValueError):
+            ProcessSpec(argv=(sys.executable, "-c", "pass"), log_max_bytes=1.5)  # type: ignore[arg-type]
+        self.assertEqual(ProcessSpec(argv=(sys.executable, "-c", "pass")).log_max_bytes, 64 * 1024 * 1024)
+
+    def test_oversized_log_from_previous_run_is_rotated_at_start(self):
+        log = os.path.join(self.dir.name, "child.log")
+        Path(log).write_bytes(b"o" * self.QUOTA)
+        s = self.quiet(log)
+        s.start(T0)
+        self.assertTrue(s.log_rotated_at_start)
+        self.assertEqual(os.path.getsize(log + ".1"), self.QUOTA)
+        self.assertLess(os.path.getsize(log), self.QUOTA)
+        s.stop(T0)
+
+    def test_small_log_is_appended_not_rotated(self):
+        log = os.path.join(self.dir.name, "child.log")
+        Path(log).write_bytes(b"keep\n")
+        s = self.quiet(log)
+        s.start(T0); s.stop(T0)
+        self.assertFalse(s.log_rotated_at_start)
+        self.assertFalse(os.path.exists(log + ".1"))
+        self.assertTrue(Path(log).read_bytes().startswith(b"keep\n"))
+
+    def test_running_child_log_is_truncated_in_place_and_stays_bounded(self):
+        log = os.path.join(self.dir.name, "chatty.log")
+        s = self.chatty(log)
+        s.start(T0)
+        self.assertTrue(_wait(lambda: s.ready(T0)))
+        # let it exceed the quota without any tick() (no enforcement yet)
+        self.assertTrue(_wait(lambda: os.path.getsize(log) > self.QUOTA, timeout=10.0), "child did not exceed quota")
+        self.assertTrue(s.enforce_log_quota(T0))
+        self.assertEqual(s.log_truncations, 1)
+        self.assertLess(os.path.getsize(log), self.QUOTA)
+        # with ticks (as the Service loop does) the file never grows far past the quota
+        peak = 0
+        end = time.monotonic() + 2.0
+        while time.monotonic() < end:
+            s.tick(T0)
+            peak = max(peak, os.path.getsize(log))
+            time.sleep(0.02)
+        self.assertLess(peak, self.QUOTA + 256 * 1024, f"log grew to {peak} bytes despite quota")
+        self.assertGreaterEqual(s.log_truncations, 2)
+        m = s.measure(T0)
+        if m is not None:
+            self.assertIn("log_bytes", m)
+        s.stop(T0)
+        self.assertTrue(s.exited(T0))
+        # the truncation marker is written by the supervisor itself (ascii, no secrets)
+        self.assertIn(b"[osrs_ee] log truncated", Path(log).read_bytes())
+
+    def test_tick_without_log_path_does_not_touch_the_filesystem(self):
+        s = self.sup()  # DEVNULL sink
+        s.start(T0)
+        self.assertTrue(_wait(lambda: s.ready(T0)))
+        self.assertFalse(s.enforce_log_quota(T0))
+        self.assertIsNone(s.log_bytes())
+        s.stop(T0)
