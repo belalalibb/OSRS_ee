@@ -199,7 +199,35 @@ class ProcessSupervisor:
     def position(self, now: datetime) -> Optional[tuple]:
         return None  # a generic process has no position
 
+    def _signal_tree(self, sig: int) -> None:
+        """Signal the child's whole process group (POSIX); fall back to the child only.
+
+        ``start_new_session=True`` makes the child a session/process-group leader,
+        so ``killpg(child_pid)`` reaches every descendant that did not itself
+        call ``setsid``. ``ProcessLookupError`` means the group is already gone;
+        it is never re-raised because ``exited()``/``poll()`` is the exit proof.
+        Windows has no process groups in this sense: there the fallback signals
+        the direct child only, and tree termination is NOT verified here.
+        """
+        import os
+        p = self._proc
+        assert p is not None
+        try:
+            if hasattr(os, "killpg") and hasattr(os, "getpgid"):
+                os.killpg(os.getpgid(p.pid), sig)
+            else:  # pragma: no cover - non-POSIX
+                p.send_signal(sig)
+        except ProcessLookupError:
+            pass
+
     def stop(self, now: datetime) -> None:
+        """SIGTERM the process *group* → wait → SIGKILL the group → wait.
+
+        Exit proof is the direct child's ``poll()``; descendants are signalled
+        with the group but are not individually waited on (they are not our
+        children). SUP-03 tests verify a grandchild is reaped on both paths
+        (POSIX only).
+        """
         import signal
         self.stops += 1
         self.stop_requested = True
@@ -208,16 +236,23 @@ class ProcessSupervisor:
             return
         if p.poll() is None:
             try:
-                p.send_signal(signal.SIGTERM)
+                self._signal_tree(signal.SIGTERM)
                 self.last_stop_method = "SIGTERM"
                 p.wait(timeout=self.spec.stop_grace_seconds)
             except self._subprocess.TimeoutExpired:
                 try:
-                    p.kill()
+                    self._signal_tree(signal.SIGKILL)
                     self.last_stop_method = "SIGKILL"
                     p.wait(timeout=self.spec.stop_grace_seconds)
                 except (self._subprocess.TimeoutExpired, OSError):
                     pass
+            except OSError:
+                pass
+        else:
+            # Child already exited: its group may still hold descendants; sweep once.
+            # A dead leader's pgid is still valid while any member lives.
+            try:
+                self._signal_tree(signal.SIGKILL)
             except OSError:
                 pass
         self.last_exit_code = p.poll()

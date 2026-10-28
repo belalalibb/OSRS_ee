@@ -229,3 +229,82 @@ class ServiceWithProcess(ProcCase):
         self.assertEqual(res.final_state, "RECOVERY_REQUIRED")
         self.assertIn("start.failed", res.kinds())
         self.assertTrue(s.exited(T0))  # stopped and exit proven
+
+
+# Child that spawns a grandchild (own loop) and writes the grandchild pid next to
+# the ready file. Both ignore SIGTERM when asked, so only a *process-group*
+# SIGKILL can reap the grandchild. (Engine-Docs reference idea: T16 tree-kill test;
+# re-implemented here, not copied — the reference has no LICENSE.)
+TREE_CHILD = r"""
+import os, signal, subprocess, sys, time
+ready, ignore_term = sys.argv[1], sys.argv[2] == "1"
+if ignore_term:
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+grand = subprocess.Popen([sys.executable, "-c",
+    "import signal,time,sys\n" + ("signal.signal(signal.SIGTERM, signal.SIG_IGN)\n" if ignore_term else "") +
+    "while True: time.sleep(0.05)"])
+with open(ready + ".grandchild", "w") as fh:
+    fh.write(str(grand.pid))
+tick = 0
+while True:
+    tick += 1
+    tmp = ready + ".tmp"
+    with open(tmp, "w") as fh:
+        fh.write(f"{tick}\n")
+    os.replace(tmp, ready)
+    time.sleep(0.05)
+"""
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+@unittest.skipUnless(os.name == "posix", "process-group semantics are POSIX-only; Windows NOT tested here")
+class ProcessTree(ProcCase):
+    """SUP-03: stop() must terminate the whole process group, not just the direct child."""
+
+    def tree_sup(self, ignore_term: bool, grace: float = 0.5) -> ProcessSupervisor:
+        spec = ProcessSpec(argv=(sys.executable, "-c", TREE_CHILD, self.ready, "1" if ignore_term else "0"),
+                           ready_file=self.ready, stop_grace_seconds=grace)
+        s = ProcessSupervisor(spec, data_dir=self.dir.name)
+        self.sups.append(s)
+        return s
+
+    def _grandchild_pid(self) -> int:
+        self.assertTrue(_wait(lambda: os.path.exists(self.ready + ".grandchild")))
+        return int(Path(self.ready + ".grandchild").read_text())
+
+    def test_sigterm_stop_reaps_cooperative_grandchild(self):
+        s = self.tree_sup(ignore_term=False)
+        s.start(T0)
+        self.assertTrue(_wait(lambda: s.ready(T0)))
+        gpid = self._grandchild_pid()
+        self.assertTrue(_alive(gpid))
+        s.stop(T0)
+        self.assertTrue(s.exited(T0))
+        self.assertEqual(s.last_stop_method, "SIGTERM")
+        self.assertTrue(_wait(lambda: not _alive(gpid), timeout=2.0), "grandchild orphaned after SIGTERM stop")
+
+    def test_sigkill_escalation_reaps_grandchild_that_ignores_sigterm(self):
+        s = self.tree_sup(ignore_term=True)
+        s.start(T0)
+        self.assertTrue(_wait(lambda: s.ready(T0)))
+        gpid = self._grandchild_pid()
+        s.stop(T0)
+        self.assertTrue(s.exited(T0))
+        self.assertEqual(s.last_stop_method, "SIGKILL")
+        self.assertTrue(_wait(lambda: not _alive(gpid), timeout=2.0), "grandchild orphaned after SIGKILL stop")
+
+    def test_stop_after_child_already_exited_is_safe(self):
+        s = self.sup(delay=10.0, exit_after=0.2)
+        s.start(T0)
+        self.assertTrue(_wait(lambda: s.exited(T0)))
+        s.stop(T0)  # no ProcessLookupError leak, no signal to a reused pgid
+        self.assertEqual(s.last_exit_code, 3)
