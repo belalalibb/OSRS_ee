@@ -84,7 +84,9 @@ cp config.example.toml config.toml            # عدّل data_dir إن أردت�
 osrs-ee service --config config.toml --max-ticks 20          # ينام tick_seconds بين الدورات
 osrs-ee service --config config.toml --max-ticks 20 --fast   # بلا نوم (عروض/اختبارات)
 osrs-ee store show data/store.sqlite
+python -m osrs_ee status                                     # نفس نقطة الدخول إن لم يكن سكربت pip على PATH
 ```
+**خدمة واحدة لكل `data_dir`** (SUP-04): عند البدء يُؤخذ قفل حصري `data_dir/service.lock` (`flock`؛ تُحرّره النواة عند موت الحامل فلا قفل عالق). خدمة ثانية على نفس المجلد → `REFUSED … One service per data_dir` exit 2 **قبل** لمس المخزن. امتلاك القفل هو الدليل أنه لا خدمة أخرى حيّة، لذا بعد `recover()` تُستدعى `reconcile_orphaned_sessions()`: أي حساب تُرك في LEASED/STARTING/RUNNING/DRAINING مع lease نشط (موت مفاجئ/SIGKILL/انقطاع كهرباء) → تحرير الـlease بسبب `orphan: service lock acquired` + `RECOVERY_REQUIRED` (لا READY أبدًا). الخرج يحمل `"orphaned_sessions_reconciled"` و`"lock"`.
 يحمّل الإعدادات **fail-closed** (مفتاح مجهول/سر حرفي/حد خاطئ → `CONFIG REFUSED` exit 2)، يبني المكوّنات عبر `osrs_ee/wiring.py` (كل مكوّن يُعلن وضعه: `FAKE` / `DISABLED` / `LOOPBACK_ONLY` / `REAL`)، يفتح/يستعيد المخزن، يُهيئ الحساب إلى READY، ثم يدير جلسة واحدة: قبول بالموارد (قياس المضيف الفعلي عبر `measure.py` إن توفر `/proc`، وإلا لقطة محقونة) → `LEASED→STARTING` → `sup.start` → **بوابة الجاهزية** (`STARTING→RUNNING` فقط عند `sup.ready()`؛ انقضاء `health.ready_timeout_seconds` أو خروج العملية → `RECOVERY_REQUIRED` بسبب `start.timeout`/`start.exited`) → خطوات → إيقاف منظم (`abort → drain → stop`) → RESTING. يُثبّت الحالة في SQLite ويستأنف منها في التشغيل التالي (RESTING → READY → epoch جديد). الخرج يحمل `"mode"` و`"components"` و`"egress_denied"`.
 
 **يرفض** (exit 2، بلا أي اتصال): `target.mode="device"` (لا محوّل لعبة حقيقي بعد؛ S04b على الهدف)؛ `telegram.enabled=true` أو `ai.enabled=true` بلا **كلٍّ من** `--allow-real-network` **و** متغيّر البيئة `OSRS_EE_ALLOW_NETWORK=1` **و** وجود المضيف في `allowed_hosts` **و** وجود السر المُشار إليه بـ`ref:env:NAME` في البيئة — أي شرط ناقص → `WiringError`؛ والتشغيل بلا حد (`--max-ticks` أو `[worker].max_ticks`). Ctrl-C/SIGTERM → `request_stop` → إيقاف منظم في الدورة التالية. الوضع الافتراضي SIMULATED ولا يمكن الانزلاق إلى REAL بالصدفة.
@@ -95,7 +97,10 @@ osrs-ee config-check --config config.toml     # يحمّل ويفحص الإعد
 osrs-ee doctor --config config.toml           # إصدارات Python/SQLite/jsonschema، /proc، قرص data_dir مقابل الاحتياطي، DISPLAY/java (TARGET_ONLY)، وجود أسرار ref:env (PRESENCE_ONLY)، ready_local
 osrs-ee store init data/store.sqlite          # تهيئة/استعادة المخزن
 osrs-ee conformance                           # C1–C7 على FakeAdapter؛ المحوّل الحقيقي يجب أن يجتازها على الهدف (tests/target)
+osrs-ee secret-scan .                         # فحص أشكال الأسرار في الشجرة: يطبع path/line/pattern/length فقط — لا يطبع القيمة أبدًا؛ exit 2 عند أي نتيجة
+osrs-ee secret-scan . --config config.toml    # + فحص صلاحيات data_dir/store/service.lock (POSIX: تحذير إن كانت مقروءة للمجموعة/الآخرين)
 ```
+سطر يحمل كناري اصطناعيًا موثّقًا يُستثنى بعلامة مرئية `# secret-scan: allow`. الشجرة الحالية: 144 ملفًا، 0 نتائج (اختبار انحدار `test_repository_is_clean`).
 دلالة أنواع فحوص `doctor`:
 | النوع | المعنى |
 |---|---|
@@ -109,7 +114,9 @@ osrs-ee conformance                           # C1–C7 على FakeAdapter؛ ا�
 | المكوّن | الملف | ما يثبته الاختبار المحلي | ما لا يثبته |
 |---|---|---|---|
 | محوّل قراءة loopback | `osrs_ee/adapters/loopback_readonly.py` | GET `/observe` من `http://127.0.0.1:<port>` فقط، حدود الحجم/المهلة، رفض كل `dispatch()` (`NEVER_DISPATCH`)، أخطاء صادقة في `last_error` | وجود أي نقطة قراءة على الهدف (ADR-008) |
-| مشرف عمليات عام | `osrs_ee/supervisor.py: ProcessSpec/ProcessSupervisor` | بدء عملية ابنة في session خاصة، جاهزية عبر ready_file، tick من ملف، SIGTERM→مهلة→SIGKILL، دليل خروج، قياس /proc — مُختبر بعملية python فقط | تشغيل JVM/GUI فعلي (ADR-007) |
+| مشرف عمليات عام | `osrs_ee/supervisor.py: ProcessSpec/ProcessSupervisor` | بدء عملية ابنة في session خاصة، جاهزية عبر ready_file، tick من ملف، **SIGTERM→مهلة→SIGKILL على مجموعة العملية كاملة (`killpg`؛ الحفيد يُقتل — SUP-03)**، دليل خروج، قياس /proc، **سجل الابن محدود بـ`log_max_bytes` (افتراضي 64 MiB: دوران إلى `.1` عند البدء + اقتطاع في المكان أثناء التشغيل — SUP-05)** — مُختبر بعملية python فقط على Linux | تشغيل JVM/GUI فعلي (ADR-007)؛ أي سلوك على Windows (مجموعات العمليات/`taskkill`) |
+| قفل الخدمة | `osrs_ee/lock.py: ServiceLock` | `flock` حصري غير حاجب على `data_dir/service.lock`؛ رفض الازدواج؛ تحرير تلقائي عند موت الحامل؛ ملف pid للتشخيص فقط | فرع `msvcrt.locking` على Windows (غير مُختبر هنا) |
+| فحص أسرار | `osrs_ee/secret_scan.py` | نتائج وصفية فقط، استثناء `ref:`/placeholders، تخطّي .git/الثنائيات، فحص صلاحيات POSIX | أن غياب النتائج يعني غياب الأسرار (الفحص بالأشكال فقط) |
 | قياس موارد | `osrs_ee/measure.py` | RSS/FD/قرص/CPU من `/proc` على Linux | OS الهدف إن لم يكن Linux مع /proc |
 | سياسة egress | `osrs_ee/egress.py` | allowlist `host:port[:purpose]`، loopback مسموح افتراضيًا، `guarded_opener` يرفع `EgressDenied` قبل `connect()`، جرد كل قرار | أن النظام الحقيقي لا يملك مسارًا آخر للشبكة خارج هذا الفاتح |
 | توصيل المكوّنات | `osrs_ee/wiring.py` | بناء Telegram/AI حقيقيين فقط بشروط opt-in الأربعة؛ وإلا FAKE/DISABLED | صلاحية أي token/مفتاح فعلي |
@@ -191,3 +198,7 @@ OSRS_EE_ALLOW_NETWORK=1 OSRS_EE_TG_TOKEN=... OSRS_EE_TG_CHAT_ID=... python -m py
 | الحساب `RECOVERY_REQUIRED` بسبب `start.timeout` | المشرف لم يُعلن الجاهزية خلال `health.ready_timeout_seconds` | راجع ready_file/سجل العملية؛ ارفع المهلة بحذر؛ لا يعود READY تلقائيًا |
 | `doctor` يطبع `ready_local=false` بسبب القرص | المساحة الحرة في data_dir أقل من `limits.disk_reserve_bytes` | حرّر مساحة أو اضبط الاحتياطي؛ في sandbox الاختبارات تضبط 0 عمدًا |
 | 8 اختبارات skipped | بوابات `tests/target` غير مفعّلة | مقصود؛ انظر §4 |
+| `REFUSED: service lock … is held by another instance (pid N)` | خدمة أخرى تعمل على نفس `data_dir` | أوقفها أولًا؛ لا تحذف `service.lock` يدويًا (القفل بالنواة لا بالملف؛ ملف pid قديم بلا حامل لا يمنع البدء) |
+| `orphaned_sessions_reconciled` غير فارغ و`state_before=RECOVERY_REQUIRED` | التشغيل السابق مات دون إيقاف منظم (SIGKILL/كهرباء) | مقصود؛ راجع `store show` وسجل العملية؛ تسوية يدوية RECONCILING → READY |
+| `[osrs_ee] log truncated …` في سجل الابن | الابن تجاوز `log_max_bytes` | مقصود؛ ارفع الحد في `ProcessSpec` أو قلّل ثرثرة العميل؛ النسخة السابقة في `<log>.1` إن دارت عند البدء |
+| `secret-scan` exit 2 | شكل سري أو صلاحيات واسعة | افحص السطر المُشار إليه؛ إن كان كناري اصطناعيًا موثّقًا أضف `# secret-scan: allow`؛ أصلح الصلاحيات بـ`chmod 600/700` |
