@@ -454,3 +454,26 @@ class Store:
                 if r["account_id"] not in affected:
                     affected.append(r["account_id"])
         return affected
+
+    def reconcile_orphaned_sessions(self, *, now: datetime, reason: str = "orphan: service lock acquired") -> list[str]:
+        """Accounts still LEASED/STARTING/RUNNING/DRAINING *with* an active lease -> RECOVERY_REQUIRED.
+
+        ``recover()`` deliberately leaves these alone: the Store cannot tell a
+        live session from the leftovers of a service that was SIGKILLed or lost
+        power. The caller supplies that proof — it must hold the exclusive
+        service lock for this data dir (``osrs_ee.lock.ServiceLock``), which no
+        other live service process can hold. The orphan lease is released with
+        ``reason`` and the account goes to RECOVERY_REQUIRED, never READY
+        (the previous process's effects on the client are unknown). Idempotent.
+        """
+        affected: list[str] = []
+        with self._tx():
+            rows = self._conn.execute(
+                "SELECT a.account_id, a.state_version, l.lease_id FROM accounts a JOIN leases l ON l.account_id=a.account_id"
+                " WHERE a.state IN ('LEASED','STARTING','RUNNING','DRAINING') AND l.released_at IS NULL").fetchall()
+            for r in rows:
+                self._conn.execute("UPDATE leases SET released_at=?, release_reason=? WHERE lease_id=?", (_iso(now), reason, r["lease_id"]))
+                self._conn.execute("UPDATE commands SET phase='UNKNOWN' WHERE account_id=? AND phase IN ('DISPATCHING','ACKNOWLEDGED')", (r["account_id"],))
+                self._transition_locked(r["account_id"], "RECOVERY_REQUIRED", r["state_version"], f"reconcile_orphaned_sessions(): {reason}", now)
+                affected.append(r["account_id"])
+        return affected

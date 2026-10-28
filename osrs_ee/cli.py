@@ -399,10 +399,20 @@ def cmd_service(args: argparse.Namespace) -> int:
               file=sys.stderr)
         return EXIT_INVALID
     Path(cfg.target.data_dir).mkdir(parents=True, exist_ok=True)
+    from osrs_ee.lock import LockHeld, ServiceLock
+    lock = ServiceLock(cfg.target.data_dir)
+    try:
+        lock.acquire()
+    except LockHeld as e:
+        print(f"REFUSED: {e}. One service per data_dir; stop the other instance first (never run two).", file=sys.stderr)
+        return EXIT_INVALID
     t0 = _now()
     store = Store.open(cfg.store_path, now=t0)
     try:
         recovered = store.recover(now=t0)
+        # Holding the exclusive lock proves no other service process is alive: any account
+        # still in a session state with an active lease is an orphan of a dead process.
+        orphaned = store.reconcile_orphaned_sessions(now=t0)
         state0 = sv.bootstrap_account(store, cfg, t0)
         obs = {
             "schema_version": "1.0", "observation_id": "obs_service001", "account_id": cfg.account.account_id,
@@ -427,11 +437,13 @@ def cmd_service(args: argparse.Namespace) -> int:
             "components": wd.report(),
             "egress_denied": wd.egress.denied(),
             "config": args.config, "store": str(cfg.store_path), "recovered_accounts": recovered,
+            "orphaned_sessions_reconciled": orphaned, "lock": str(lock.path),
             "state_before": state0, "final_state": res.final_state, "ticks": res.ticks, "restarts": res.restarts,
             "stop_reason": res.stop_reason, "events": [{"tick": e.tick, "kind": e.kind, "detail": e.detail} for e in res.events],
         }, indent=2, ensure_ascii=False))
     finally:
         store.close()
+        lock.release()
     return EXIT_OK
 
 
